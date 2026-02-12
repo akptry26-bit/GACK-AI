@@ -1,0 +1,50 @@
+{
+            /* 1. Inga dhaan unga college image-ah background-ah vaikurom */
+            /* Gradient overlay use panniruken, appo dhaan text nalla theriyum */
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                        url('/static/images/college_bg.png') no-repeat center center fixed;
+            background-size: cover;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }/* Login Page Specific Styles */
+.login-body {
+    display: flex; justify-content: center; align-items: center; height: 100vh;
+}
+
+.login-card {
+    background: rgba(15, 15, 15, 0.8);
+    backdrop-filter: blur(25px);
+    padding: 40px; border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%; max-width: 400px; text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.login-header i { font-size: 3rem; color: var(--primary); margin-bottom: 15px; }
+.login-header h2 { margin-bottom: 5px; letter-spacing: 1px; }
+.login-header p { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
+
+.input-group {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px; padding: 12px 15px;
+    display: flex; align-items: center; gap: 15px; margin-bottom: 20px;
+}
+
+.input-group input {
+    background: none; border: none; color: white; outline: none; width: 100%;
+}
+
+.login-btn {
+    width: 100%; padding: 15px; border-radius: 12px; border: none;
+    background: var(--primary); color: white; font-weight: bold;
+    cursor: pointer; transition: 0.3s; margin-top: 10px;
+}
+
+.login-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+.error-msg { color: #ff4d4d; font-size: 0.85rem; margin-bottom: 15px; }
+.back-link-login { display: block; margin-top: 20px; color: #888; text-decoration: none; font-size: 0.85rem; }

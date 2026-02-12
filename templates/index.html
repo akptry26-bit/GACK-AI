@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAC AI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dark-mode">
+
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-left">
+                <div class="college-branding">
+                    <img src="{{ url_for('static', filename='images/college logo.png') }}" alt="GAC Logo" class="clg-logo-img">
+                </div>
+                <div class="bot-meta-info">
+                    <h1>Government Arts College - KARUR </h1>
+                    <div class="system-status-container">
+                        <span class="status-pulse"></span>
+                        <span id="engine-status">SYSTEM ONLINE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="environment-stats">
+                    <span class="stat-pill"><i class="fas fa-microchip"></i> 14ms</span>
+                </div>
+                <button class="action-btn" onclick="toggleTheme()" id="theme-toggle-btn">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="action-btn" onclick="location.href='/admin-login'">
+                    <i class="fas fa-shield-halved"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="chat-surface" id="chat-scroller">
+            <div class="message-row bot-row animate-in">
+                <div class="avatar-shroud"><i class="fas fa-robot"></i></div>
+                <div class="bubble-stack">
+                    <div class="chat-bubble">
+                        Greetings! I am the GAC Karur Academic Assistant. How can I help you with Department or Admission details today?
+                    </div>
+                    <span class="time-stamp">System Boot Successful</span>
+                </div>
+            </div>
+        </main>
+
+        <footer class="control-panel">
+            
+
+            <div class="input-orchestrator">
+                <div class="pill-input-shroud">
+                    <div class="shroud-icon"><i class="fas fa-paperclip"></i></div>
+                    <input type="text" id="query-input" placeholder="Type your academic query here..." autocomplete="off">
+                    <div class="shroud-icon" id="voice-trigger"><i class="fas fa-microphone"></i></div>
+                </div>
+                <button class="launch-trigger" id="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+
+            <div class="branding-layer">
+                <p>© 2026 Government Arts College, Karur • Developed for KARUPPAIYA A</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>
