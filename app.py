@@ -23,18 +23,29 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 genai.configure(api_key="AIzaSyBBrd0WZWgeQokoY9un4dz5vZxq_GXLU-0")
 
 # Step 2: Use the most basic model
-model = genai.GenerativeModel('gemini-1.5-flash') 
-# Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
+model = genai.GenerativeModel('gemini-2.5-flash')
 
-try:
-    print("AI is thinking...")
-    # Step 3: Minimal prompt
-    response = model.generate_content("Hello")
-    print("Response from AI:", response.text)
-except Exception as e:
-    # Indha error ennanu sonna dhaan nanba kandu pudikka mudiyum
-    print(f"FAILED: {e}")
-    
+def get_response(user_input):
+    try:
+        # Unga list-la irundha correct-ana model name idhu dhaan
+        # Prefix 'models/' kandippa venum
+        model = genai.GenerativeModel(model_name='models/gemini-2.5-flash')
+        
+        response = model.generate_content(user_input)
+        
+        if response.text:
+            return response.text
+        else:
+            return "No response from AI."
+            
+    except Exception as e:
+        # Viva-la error vandha "Quata Exceeded" or "Safety block"-nu sollu
+        return f"Error: {e}"
+
+# Test
+print("Testing...")
+print(get_response("Hi, tell me about your version."))
+
     # 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
@@ -65,6 +76,7 @@ def ask():
         # Indha line-ah add pannunga, terminal-la enna error-nu kaattum
         print(f"Error: {e}") 
         return jsonify({'reply': 'LINK ERROR: Server connection failed.'})
+
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -196,6 +208,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
