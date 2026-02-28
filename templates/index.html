@@ -24,7 +24,19 @@
                     </div>
                 </div>
             </div>
+<div class="lang-selector">
+    <button onclick="setLanguage('en')">English</button>
+    <button onclick="setLanguage('ta')">தமிழ்</button>
+</div>
 
+<script>
+let userLang = 'en'; // Default
+function setLanguage(lang) {
+    userLang = lang;
+    alert("Language set to: " + (lang === 'ta' ? 'Tamil' : 'English'));
+}
+</script>
+            
             <div class="header-right">
                 <div class="environment-stats">
                     <span class="stat-pill"><i class="fas fa-microchip"></i> 14ms</span>
@@ -72,4 +84,5 @@
 
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
+
 </html>
