@@ -23,7 +23,8 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 genai.configure(api_key="AIzaSyBBrd0WZWgeQokoY9un4dz5vZxq_GXLU-0")
 
 # Step 2: Use the most basic model
-model = genai.GenerativeModel('gemini-2.5-flash')
+model = genai.GenerativeModel('gemini-1.5-flash') 
+# Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
 
 try:
     print("AI is thinking...")
@@ -195,6 +196,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
