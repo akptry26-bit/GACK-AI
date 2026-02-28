@@ -15,21 +15,7 @@ function toggleTheme() {
     icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
     localStorage.setItem('gac-core-theme', isLight ? 'light' : 'dark');
 }
-async function sendMessage() {
-    const userInput = document.getElementById('user-input').value;
-    
-    // User Tamil-la type panna, AI-ku andha signal-ah anupuvom
-    const response = await fetch('/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            message: userInput + " (Reply in the same language as my input)" 
-        })
-    });
-    
-    const data = await response.json();
-    document.getElementById('chat-window').innerHTML += `<p>${data.reply}</p>`;
-}
+
 // 2. Messaging Core (THE FIX)
 async function handleSubmission() {
     const queryText = inputField.value.trim();
