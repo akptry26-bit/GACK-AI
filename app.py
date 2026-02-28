@@ -23,7 +23,7 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 genai.configure(api_key="AIzaSyBBrd0WZWgeQokoY9un4dz5vZxq_GXLU-0")
 
 # Step 2: Use the most basic model
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 try:
     print("AI is thinking...")
@@ -53,7 +53,12 @@ def init_db():
     conn.close()
 
 init_db()
-
+@app.route('/ask', methods=['POST'])
+def ask_ai():
+    user_query = request.json.get('message')
+    # AI generates response based on user input
+    response = model.generate_content(user_query)
+    return jsonify({"reply": response.text})
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -185,5 +190,6 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
