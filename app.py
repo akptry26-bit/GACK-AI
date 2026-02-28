@@ -55,12 +55,6 @@ def init_db():
 init_db()
 @app.route('/ask', methods=['POST'])
 def ask():
-    data = request.json
-    user_query = data.get('message')
-    lang = data.get('lang', 'en')
-    
-    # Prompt-la language-ah add pannunga
-    full_prompt = f"{user_query} (Please reply in { 'Tamil' if lang == 'ta' else 'English' })"
     try:
         user_message = request.json.get('message')
         # Gemini API call
@@ -201,6 +195,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
