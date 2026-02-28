@@ -54,11 +54,16 @@ def init_db():
 
 init_db()
 @app.route('/ask', methods=['POST'])
-def ask_ai():
-    user_query = request.json.get('message')
-    # AI generates response based on user input
-    response = model.generate_content(user_query)
-    return jsonify({"reply": response.text})
+def ask():
+    try:
+        user_message = request.json.get('message')
+        # Gemini API call
+        response = model.generate_content(user_message)
+        return jsonify({'reply': response.text})
+    except Exception as e:
+        # Indha line-ah add pannunga, terminal-la enna error-nu kaattum
+        print(f"Error: {e}") 
+        return jsonify({'reply': 'LINK ERROR: Server connection failed.'})
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -190,6 +195,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
