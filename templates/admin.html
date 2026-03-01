@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAC AI | Admin Control Center</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="static/images/college logo.png" type="image/png">
     
     <style>
         /* CSS SECTION - PROFESSIONAL WHITE THEME */
@@ -93,6 +94,97 @@ td:nth-child(2)::first-letter {
         /* Modal Styling */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: var(--card-bg); padding: 35px; border-radius: 20px; width: 450px; box-shadow: 0 20px 25px rgba(0,0,0,0.1); }
+    /* --- MOBILE OPTIMIZATION (Media Queries) --- */
+
+@media (max-width: 768px) {
+    /* Container Adjustments */
+    .app-container {
+        border: none;
+        height: 100vh;
+        max-width: 100%;
+    }
+
+    /* Header for Mobile */
+    .app-header {
+        padding: 12px 20px;
+    }
+
+    .college-branding {
+        width: 45px;
+        height: 45px;
+    }
+
+    .bot-meta-info h1 {
+        font-size: 1.1rem;
+    }
+
+    /* Chat Area Adjustments */
+    .chat-surface {
+        padding: 20px 15px;
+        gap: 20px;
+    }
+
+    .message-row {
+        max-width: 90%; /* Mobile-la bubble konjam perusa theriyanum */
+    }
+
+    .chat-bubble {
+        padding: 12px 18px;
+        font-size: 0.92rem;
+    }
+
+    .avatar-shroud {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+
+    /* Input Panel for Mobile */
+    .control-panel {
+        padding: 15px 15px 25px;
+    }
+
+    .suggestion-ribbon {
+        gap: 8px;
+        justify-content: flex-start; /* Mobile-la left scroll aagum */
+        overflow-x: auto;
+        padding-bottom: 10px;
+        scrollbar-width: none; /* Hide scrollbar */
+    }
+
+    .suggestion-ribbon::-webkit-scrollbar {
+        display: none;
+    }
+
+    .suggest-chip {
+        padding: 8px 15px;
+        font-size: 0.8rem;
+    }
+
+    .input-orchestrator {
+        gap: 10px;
+    }
+
+    .pill-input-shroud {
+        padding: 8px 18px;
+    }
+
+    #query-input {
+        font-size: 0.95rem;
+    }
+
+    .launch-trigger {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Landscape Mode (Phone-ah thiruppi vacha) */
+@media (max-height: 500px) {
+    .app-header { padding: 5px 20px; }
+    .suggestion-ribbon { display: none; } /* Space save panna */
+}
     </style>
 </head>
 <body>
