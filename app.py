@@ -37,15 +37,11 @@ def get_final_answer(user_query):
             prompt = f"Answer this question in 2 or 15 lines. Give only important points: {user_query}"
             
             response = model.generate_content(prompt)
-            response = model.generate_content(user_query)
-        # Check if response actually has text
-        if response and response.text:
-            return response.text
-        else:
-            return "I am processing your request, please ask again clearly."
-    except Exception as e:
-        print(f"API Error: {e}")
-        return "Network busy. Please try after some time."
+            
+            # Badhil short-ah varudha-nu terminal-la check panna
+            return response.text.strip() 
+        except Exception as e:
+            return "Sorry, please try again later."
     # 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
