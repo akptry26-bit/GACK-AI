@@ -7,6 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="static/images/college logo.png" type="image/png">
 </head>
 <body class="dark-mode">
 
@@ -17,7 +18,7 @@
                     <img src="{{ url_for('static', filename='images/college logo.png') }}" alt="GAC Logo" class="clg-logo-img">
                 </div>
                 <div class="bot-meta-info">
-                    <h1>Government Arts College - KARUR </h1>
+                    <h1>Government Arts College - Karur </h1>
                     <div class="system-status-container">
                         <span class="status-pulse"></span>
                         <span id="engine-status">SYSTEM ONLINE</span>
@@ -25,14 +26,11 @@
                 </div>
             </div>
 
-            
             <div class="header-right">
                 <div class="environment-stats">
-                    <span class="stat-pill"><i class="fas fa-microchip"></i> 14ms</span>
+                    <span class="stat-pill"> </span>
                 </div>
-                <button class="action-btn" onclick="toggleTheme()" id="theme-toggle-btn">
-                    <i class="fas fa-moon"></i>
-                </button>
+               
                 <button class="action-btn" onclick="location.href='/admin-login'">
                     <i class="fas fa-shield-halved"></i>
                 </button>
@@ -56,9 +54,9 @@
 
             <div class="input-orchestrator">
                 <div class="pill-input-shroud">
-                    <div class="shroud-icon"><i class="fas fa-paperclip"></i></div>
+                    <div class="shroud-icon"></div>
                     <input type="text" id="query-input" placeholder="Type your academic query here..." autocomplete="off">
-                    <div class="shroud-icon" id="voice-trigger"><i class="fas fa-microphone"></i></div>
+                    <div class="shroud-icon" id="voice-trigger"></div>
                 </div>
                 <button class="launch-trigger" id="submit-btn">
                     <i class="fas fa-paper-plane"></i>
@@ -73,6 +71,4 @@
 
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
-
 </html>
-
