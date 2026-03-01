@@ -19,32 +19,30 @@ ADMIN_PASS = "GAC@2026"
 API_KEY = os.getenv("GEMINI_API_KEY")
 GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts College, Karur. If users ask unrelated questions, politely tell them you only handle college queries."
 
-# Step 1: Replace with your actual key
-genai.configure(api_key="AIzaSyBBrd0WZWgeQokoY9un4dz5vZxq_GXLU-0")
+# 1. API Key - Replace yours
+genai.configure(api_key="AIzaSyDALnOb1ykTa3HIAbwpq9R9o-uYsvFn6_I")
 
-# Step 2: Use the most basic model
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-def get_response(user_input):
-    try:
-        # Unga list-la irundha correct-ana model name idhu dhaan
-        # Prefix 'models/' kandippa venum
-        model = genai.GenerativeModel(model_name='models/gemini-2.5-flash')
-        
-        response = model.generate_content(user_input)
-        
-        if response.text:
-            return response.text
-        else:
-            return "No response from AI."
+def get_final_answer(user_query):
+    # STEP 1: Local Database check (Section 2.2)
+    local_answer = get_college_info(user_query) 
+    
+    if local_answer:
+        return local_answer
+    else:
+        # STEP 2: Gemini AI with "Strict Instructions"
+        try:
+            # Inga dhaan "Short-ah sollu" nu instruction tharom
+            prompt = f"Answer this question in 2 or 15 lines. Give only important points: {user_query}"
             
-    except Exception as e:
-        # Viva-la error vandha "Quata Exceeded" or "Safety block"-nu sollu
-        return f"Error: {e}"
-
-# Test
-print("Testing...")
-print(get_response("Hi, tell me about your version."))
+            response = model.generate_content(prompt)
+            
+            # Badhil short-ah varudha-nu terminal-la check panna
+            return response.text.strip() 
+        except Exception as e:
+            return "Sorry, please try again later."
+#
 
     # 3. DATABASE ENGINE
 def init_db():
@@ -65,6 +63,7 @@ def init_db():
     conn.close()
 
 init_db()
+
 @app.route('/ask', methods=['POST'])
 def ask():
     try:
@@ -208,12 +207,4 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-
-
-
-
-
-
 
