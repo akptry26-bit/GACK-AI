@@ -16,32 +16,33 @@ ADMIN_USER = "admin"
 ADMIN_PASS = "GAC@2026"
 
 # 2. GEMINI AI SETUP (Fallback)
-API_KEY = os.getenv("GEMINI_API_KEY")
+API_KEY = os.environ.get('GEMINI_API_KEY')
+genai.configure(api_key="AIzaSyCDIlCqVqT3g4xMJndNAqweYwhlgHscfac")
 GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts College, Karur. If users ask unrelated questions, politely tell them you only handle college queries."
 
 # 1. API Key - Replace yours
-genai.configure(api_key="AIzaSyAGSlaWJtV9sKuFUPwLzC013OdenddHpOA")
+genai.configure(api_key="AIzaSyCDIlCqVqT3g4xMJndNAqweYwhlgHscfac")
 
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_final_answer(user_query):
-    # STEP 1: Local Database check (Section 2.2)
-    local_answer = get_college_info(user_query) 
-    
-    if local_answer:
-        return local_answer
-    else:
-        # STEP 2: Gemini AI with "Strict Instructions"
-        try:
-            # Inga dhaan "Short-ah sollu" nu instruction tharom
-            prompt = f"Answer this question in 2 or 15 lines. Give only important points: {user_query}"
+    try:
+        # Prompt engineering to force a simple response
+        simple_prompt = f"Answer in 1 or 2 sentences: {user_query}"
+        
+        response = model.generate_content(simple_prompt)
+        
+        if response and response.text:
+            # Response-ah trim panni clean-ah tharom
+            return response.text.strip()
+        else:
+            return "Could you please rephrase your question about GAC Karur?"
             
-            response = model.generate_content(prompt)
-            
-            # Badhil short-ah varudha-nu terminal-la check panna
-            return response.text.strip() 
-        except Exception as e:
-            return "Sorry, please try again later."
+    except Exception as e:
+        print(f"Error: {e}")
+        # Screenshot (2)-la neenga vachurukura fallback message
+        return "I am trained to answer questions about GAC Karur courses and admissions."
+
     # 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
@@ -66,13 +67,19 @@ init_db()
 def ask():
     try:
         user_message = request.json.get('message')
-        # Gemini API call
+        
+        # Simple test to check if AI is alive
         response = model.generate_content(user_message)
-        return jsonify({'reply': response.text})
+        
+        if response and hasattr(response, 'text'):
+            return jsonify({"reply": response.text})
+        else:
+            # Response vandhu text illana (Safety filter block)
+            return jsonify({"reply": "I am unable to answer this specific query. Please ask about GAC Karur."})
+            
     except Exception as e:
-        # Indha line-ah add pannunga, terminal-la enna error-nu kaattum
-        print(f"Error: {e}") 
-        return jsonify({'reply': 'LINK ERROR: Server connection failed.'})
+        print(f"DEBUG ERROR: {str(e)}") # Terminal-la error paaka
+        return jsonify({"reply": "Connectivity issue. Please check your internet or API key."})
 
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
 @app.route('/chat', methods=['POST'])
@@ -205,6 +212,4 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
 
