@@ -1,12 +1,26 @@
 /* --- MODERN NEON ECOSYSTEM --- */
 .light-mode {
-    --bg-deep: #f8fafc; 
-    --surface: #ffffff; 
-    --accent: #1a73e8; 
-    --text-high: #1e293b; /* Bold black/grey text */
-    --text-dim: #64748b; 
-    --border: #e2e8f0; 
-    --ai-msg: #f1f5f9; /* Light grey background for bot */
+    /* --- Core Surfaces --- */
+    --bg-deep: #fdfdfd;       /* Ultra clean white-grey background */
+    --surface: #ffffff;      /* Pure white for chat container */
+    
+    /* --- Brand & Action --- */
+    --accent: #0b57d0;       /* Official Google Blue for trust */
+    --accent-glow: 0 0 20px rgba(11, 87, 208, 0.15);
+    --online-green: #10b981; /* For that neural system pulse */
+    
+    /* --- Typography (High Readability) --- */
+    --text-high: #111827;    /* Deep charcoal for main text */
+    --text-dim: #4b5563;     /* Muted grey for timestamps/meta */
+    
+    /* --- Messaging Elements --- */
+    --border: #f1f3f4;       /* Subtle borders for a 'borderless' feel */
+    --ai-msg: #f8f9fa;       /* Very soft grey for bot bubbles */
+    --user-msg: #e7f0fe;     /* Very light blue for user bubbles */
+    
+    /* --- Interactive --- */
+    --hover-bg: #f1f5f9;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 /* --- CORE ARCHITECTURE --- */
@@ -146,3 +160,4 @@ body { background: var(--bg-deep); height: 100vh; overflow: hidden; display: fle
     .app-header { padding: 5px 20px; }
     .suggestion-ribbon { display: none; } /* Space save panna */
 }
+
