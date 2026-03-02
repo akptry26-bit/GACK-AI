@@ -17,11 +17,11 @@ ADMIN_PASS = "GAC@2026"
 
 # 2. GEMINI AI SETUP (Fallback)
 API_KEY = os.environ.get('GEMINI_API_KEY')
-genai.configure(api_key="AIzaSyCDIlCqVqT3g4xMJndNAqweYwhlgHscfac")
+genai.configure(api_key="AIzaSyDpEhHJ-op8ebW5Qb-HewTj7OvF4AUw42k")
 GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts College, Karur. If users ask unrelated questions, politely tell them you only handle college queries."
 
 # 1. API Key - Replace yours
-genai.configure(api_key="AIzaSyCDIlCqVqT3g4xMJndNAqweYwhlgHscfac")
+genai.configure(api_key="AIzaSyDpEhHJ-op8ebW5Qb-HewTj7OvF4AUw42k")
 
 model = genai.GenerativeModel('gemini-2.5-flash')
 
