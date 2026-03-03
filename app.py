@@ -16,7 +16,7 @@ ADMIN_USER = "admin"
 ADMIN_PASS = "GAC@2026"
 
 # 2. GEMINI AI SETUP (Fallback)
-API_KEY = os.environ.get('GEMINI_API_KEY')
+api_key = os.environ.get('GEMINI_API_KEY')
 if not api_key:
     print("Warning: API Key not found!")
 else:
