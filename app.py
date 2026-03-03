@@ -34,31 +34,41 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_chat_response(user_input):
+    # 1. Scraper-ah oru background thagavala vachukuvom
     try:
-        # 1. Google Search tool-ah enable panrom
-        # Idhu dhaan Gemini-ah Google-la irundhu thagaval edukka vaikum
-        model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
-            tools=[{"google_search_retrieval": {}}] 
-        )
+        live_news = get_live_college_data()
+    except:
+        live_news = "GAC Karur Portal Info"
 
-        # 2. Instruction to follow Google Snippet style
-        prompt = f"""
-        Act as a live search assistant. Search for: {user_input}
-        If it's about Tamil Nadu college admissions 2026, provide the latest dates.
-        Structure the answer like a Google Snippet with:
-        - A short summary
-        - Bullet points for key details
-        - Bold dates and links
-        """
+    # 2. Gemini Config (Answer short-ah vara)
+    generation_config = {"temperature": 0.3, "max_output_tokens": 100}
 
+    # 3. GOOGLE SEARCH ENABLE PANROM (Idhu dhaan main!)
+    model = genai.GenerativeModel(
+        model_name='gemini-2.5-flash',
+        tools=[{"google_search_retrieval": {}}], # Google Search Connection
+        generation_config=generation_config
+    )
+    
+    # 4. Prompt-ah ippo Gemini-ku full freedom tharom
+    prompt = f"""
+    You are the Official GAC Karur Academic Assistant.
+    
+    PORTAL CONTEXT: {live_news}
+    USER QUESTION: {user_input}
+    
+    INSTRUCTIONS:
+    - ALWAYS use the Google Search tool to find the most accurate and LATEST 2026 details.
+    - If the user asks about 2026 admissions, rank lists, or college codes, search Google immediately.
+    - Provide the answer in 1 or 2 simple lines with bold text for key info.
+    - DO NOT say 'I am only trained for GAC Karur'. Just answer the question directly.
+    """
+    
+    try:
         response = model.generate_content(prompt)
         return response.text.strip()
-
     except Exception as e:
-        # Fallback message from your logic
-        return "I am trained to answer questions about GAC Karur admissions."
-
+        return "Service temporarily busy. Please check gackarur.ac.in directly."
 
     # 3. DATABASE ENGINE
 def init_db():
@@ -229,6 +239,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
