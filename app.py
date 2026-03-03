@@ -8,6 +8,7 @@ from thefuzz import process, fuzz
 import requests
 from bs4 import BeautifulSoup
 
+
 # 1. INITIALIZATION & SECURITY
 load_dotenv()
 app = Flask(__name__)
@@ -222,6 +223,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
