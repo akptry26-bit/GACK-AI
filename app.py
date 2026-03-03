@@ -33,26 +33,33 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_chat_response(user_input):
-    # 1. Scraping context
-    live_news = get_live_college_data()
-    
-    # 2. Temperature-ah 0.0-ku koraiyunga (No creativity, only facts)
-    generation_config = {"temperature": 0.0, "max_output_tokens": 150}
+    # 1. Zero creativity for maximum accuracy
+    generation_config = {"temperature": 0.0, "max_output_tokens": 100}
 
-    # 3. Google Search priority-ah vaippom
-    model = genai.GenerativeModel(model_name='gemini-2.5-flash',
-        tools=[{"google_search_retrieval": {}}],
+    # 2. Google Search Tool focus
+    model = genai.GenerativeModel(
+        model_name='gemini-2.5-flash',
+        tools=[{"google_search_retrieval": {}}], # Enables Live Google Search
         generation_config=generation_config
-    ) 
+    )
+    
+    # 3. Direct Instruction - Google-ah mattum use panna solrom
+    prompt = f"""
+    You are an AI Assistant for Government Arts College (GAC), Karur. 
+    USER QUESTION: {user_input}
+
+    MANDATORY RULES:
+    1. ALWAYS use the Google Search tool to find specific answers about GAC Karur (Codes, Admission 2026, Departments).
+    2. NEVER say "I am trained only for GAC Karur."
+    3. If the user asks about 'admission' or 'rank list', search for 'TNGASA 2026' or 'GAC Karur portal' and give the latest info.
+    4. Provide the answer in 1 or 2 clear lines.
+    """
+    
     try:
         response = model.generate_content(prompt)
-        # Inga oru safety check: if bot still gives the same old answer, manually override it.
-        final_text = response.text.strip()
-        if "I am trained" in final_text:
-             return "Searching official records for GAC Karur... Admission 2026 is handled via TNGASA. Please visit gackarur.ac.in for the rank list."
-        return final_text
-    except:
-        return "System busy. Please check gackarur.ac.in directly."
+        return response.text.strip()
+    except Exception as e:
+        return "Checking live records... Please check gackarur.ac.in for the official link." 
         
     # 3. DATABASE ENGINE
 def init_db():
@@ -223,6 +230,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
