@@ -18,9 +18,9 @@ ADMIN_PASS = "GAC@2026"
 # 2. GEMINI AI SETUP (Fallback)
 API_KEY = os.environ.get('GEMINI_API_KEY')
 if not api_key:
-    print("Warning: API Key not found in Environment Variables!")
-
-genai.configure(api_key=api_key)
+    print("Warning: API Key not found!")
+else:
+    genai.configure(api_key=api_key)
 
 GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts College, Karur. If users ask unrelated questions, politely tell them you only handle college queries."
 
