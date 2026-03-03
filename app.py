@@ -36,53 +36,37 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 def get_live_college_data():
     try:
         url = "https://gackarur.ac.in/"
-        response = requests.get(url, timeout=7) # Wait 7 seconds for full load
+        response = requests.get(url, timeout=5)
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # 1. Title and Metadata analyze panrom
-        page_title = soup.title.string if soup.title else "GAC Karur"
-        
-        # 2. Main content tags (h1, h2, h3) analyze panrom - idhu dhaan mukkiyam
-        headers = [h.get_text().strip() for h in soup.find_all(['h1', 'h2', 'h3']) if len(h.text) > 5]
-        
-        # 3. Latest News (Marquee)
-        news = [n.get_text().strip() for n in soup.find_all('marquee') if len(n.text) > 10]
-        
-        full_analysis = f"Page: {page_title}. Topics: {', '.join(headers[:5])}. News: {', '.join(news[:3])}"
-        return full_analysis
-    except Exception as e:
-        return "GAC Karur Portal."
-    
+        # Website-la irukkura marquee and links-ah edukkurom
+        updates = [item.get_text().strip() for item in soup.find_all(['marquee', 'a']) if len(item.text) > 10]
+        return " | ".join(updates[:10]) 
+    except:
+        return "GAC Website is currently not reachable."
+
 def get_chat_response(user_input):
-    live_news = get_live_college_data() # <--- Inga 4 spaces (Tab) thalli irukkanum
-    # ... matha ellaa lines-um adhae maadhiri thalli irukkanum
+    # 2. Live data-va fetch panrom
+    live_news = get_live_college_data()
     
-    # --- INGA DHAAN MATRATHAM ---
-    # Short-ah badhil vara indha config add panrom
-    generation_config = {
-        "temperature": 0.3,
-        "max_output_tokens": 80,  # Strict Limit: Idhu dhaan length-ah kuraikkum
-    }
-
+    # 3. GOOGLE SEARCH TOOL ENABLE PANROM (Indha line dhaan mukkiyam)
     model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash', # Note: Use 1.5-flash for stability
-        tools=[{"google_search_retrieval": {}}],
-        generation_config=generation_config # Inga config-ah connect panrom
+        model_name='gemini-2.5-flash',
+        tools=[{"google_search_retrieval": {}}] # <--- Google Search 'Live' connection
     )
-
     
     # 4. Prompt with Instructions
     prompt = f"""
-    You are the GAC Karur Assistant. 
-    LATEST NEWS: {live_news}
+    You are the Official GAC Karur Assistant.
     
-    QUESTION: {user_input}
+    CONTEXT FROM COLLEGE WEBSITE: {live_news}
+    
+    USER QUESTION: {user_input}
+    
     INSTRUCTIONS:
     1. First, check if the answer is in the 'CONTEXT FROM COLLEGE WEBSITE' above.
-    2. Answer strictly in 1 or 2 short lines
-    3. If NOT, use your Google Search tool to find the latest 2026 admission news for Tamil Nadu Govt Arts Colleges.
-    4. Format your response with bullet points and bold text like a Google snippet.
-    5. If it's about a Rank List, explicitly mention if it's available on gackarur.ac.in.
+    2. If NOT, use your Google Search tool to find the latest 2026 admission news for Tamil Nadu Govt Arts Colleges.
+    3. Format your response with bullet points and bold text like a Google snippet.
+    4. If it's about a Rank List, explicitly mention if it's available on gackarur.ac.in.
     """
     
     try:
@@ -260,6 +244,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
