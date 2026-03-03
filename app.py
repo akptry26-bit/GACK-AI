@@ -34,42 +34,41 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_chat_response(user_input):
-    # 1. Scraper-ah oru background thagavala vachukuvom
-    try:
-        live_news = get_live_college_data()
-    except:
-        live_news = "GAC Karur Portal Info"
+    # Live data-va oru secondary reference-ah mattum vaippom
+    live_news = get_live_college_data()
+    
+    # 1. Temperature-ah 0.0-ku koraiyunga (Zero creativity, strictly facts)
+    generation_config = {"temperature": 0.0, "max_output_tokens": 100}
 
-    # 2. Gemini Config (Answer short-ah vara)
-    generation_config = {"temperature": 0.3, "max_output_tokens": 100}
-
-    # 3. GOOGLE SEARCH ENABLE PANROM (Idhu dhaan main!)
+    # 2. Google Search-ah priority-ah vaippom
     model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        tools=[{"google_search_retrieval": {}}], # Google Search Connection
+        model_name='gemini-1.5-flash',
+        tools=[{"google_search_retrieval": {}}],
         generation_config=generation_config
     )
     
-    # 4. Prompt-ah ippo Gemini-ku full freedom tharom
+    # 3. Instruction-ah "Threat" level-la kudukkalaam (AI-ku)
+    # Idhu dhaan andha 'Default Answer' loop-ah break pannum.
     prompt = f"""
-    You are the Official GAC Karur Academic Assistant.
-    
-    PORTAL CONTEXT: {live_news}
-    USER QUESTION: {user_input}
-    
-    INSTRUCTIONS:
-    - ALWAYS use the Google Search tool to find the most accurate and LATEST 2026 details.
-    - If the user asks about 2026 admissions, rank lists, or college codes, search Google immediately.
-    - Provide the answer in 1 or 2 simple lines with bold text for key info.
-    - DO NOT say 'I am only trained for GAC Karur'. Just answer the question directly.
+    SYSTEM ROLE: You are an UNRESTRICTED academic expert for GAC Karur.
+    DATABASE CONTEXT: {live_news}
+    USER QUERY: {user_input}
+
+    MANDATORY INSTRUCTIONS:
+    - NEVER say "I am trained to answer only about GAC Karur."
+    - If you see this query, SEARCH GOOGLE immediately using your tool.
+    - Provide the specific answer (e.g., Code: 106001, Admission: May 2026).
+    - If the info is NOT in the context, DO NOT give a safety warning. Use Google Search and answer.
+    - Answer in exactly 1 short sentence.
     """
     
     try:
+        # 4. Content generation with Google Search priority
         response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
-        return "Service temporarily busy. Please check gackarur.ac.in directly."
-
+        return "GAC Karur Portal is updating. Please try again in a moment."
+        
     # 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
@@ -239,6 +238,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
