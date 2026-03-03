@@ -65,7 +65,7 @@ def get_chat_response(user_input):
     }
 
     model = genai.GenerativeModel(
-        model_name='gemini-1.5-flash', # Note: Use 1.5-flash for stability
+        model_name='gemini-2.5-flash', # Note: Use 1.5-flash for stability
         tools=[{"google_search_retrieval": {}}],
         generation_config=generation_config # Inga config-ah connect panrom
     )
@@ -260,6 +260,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
