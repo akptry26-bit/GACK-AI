@@ -53,9 +53,9 @@ def get_live_college_data():
     except Exception as e:
         return "GAC Karur Portal."
     
-    def get_chat_response(user_input):
-    # 2. Live data-va fetch panrom
-    live_news = get_live_college_data()
+def get_chat_response(user_input):
+    live_news = get_live_college_data() # <--- Inga 4 spaces (Tab) thalli irukkanum
+    # ... matha ellaa lines-um adhae maadhiri thalli irukkanum
     
     # --- INGA DHAAN MATRATHAM ---
     # Short-ah badhil vara indha config add panrom
@@ -260,6 +260,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
