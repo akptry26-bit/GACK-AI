@@ -37,12 +37,13 @@ def get_live_college_data():
         url = "https://gackarur.ac.in/"
         response = requests.get(url, timeout=5)
         soup = BeautifulSoup(response.text, 'html.parser')
-        # Website-la irukkura marquee and links-ah edukkurom
-        updates = [item.get_text().strip() for item in soup.find_all(['marquee', 'a']) if len(item.text) > 10]
-        return " | ".join(updates[:10]) 
+        
+        # News and marquee-ah mattum edukkama, full page text-ah brief-ah scan panna solluvom
+        # Idhu 'Morning/Afternoon' timing loop-ah break pannum
+        updates = [item.get_text().strip() for item in soup.find_all(['marquee', 'p', 'li']) if len(item.text) > 20]
+        return " | ".join(updates[:5]) # Only top 5 short updates
     except:
-        return "GAC Website is currently not reachable."
-
+        return ""
 def get_chat_response(user_input):
     # 2. Live data-va fetch panrom
     live_news = get_live_college_data()
@@ -63,12 +64,10 @@ def get_chat_response(user_input):
     
     # 4. Prompt with Instructions
     prompt = f"""
-    You are the Official GAC Karur Assistant.
+    You are the GAC Karur Assistant. 
+    LATEST NEWS: {live_news}
     
-    CONTEXT FROM COLLEGE WEBSITE: {live_news}
-    
-    USER QUESTION: {user_input}
-    
+    QUESTION: {user_input}
     INSTRUCTIONS:
     1. First, check if the answer is in the 'CONTEXT FROM COLLEGE WEBSITE' above.
     2. Answer strictly in 1 or 2 short lines
@@ -252,6 +251,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
