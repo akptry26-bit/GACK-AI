@@ -28,23 +28,19 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-def get_final_answer(user_query):
+def get_chat_response(user_input):
     try:
-        # Prompt engineering to force a simple response
-        simple_prompt = f"Answer in 1 or 2 sentences: {user_query}"
-        
-        response = model.generate_content(simple_prompt)
+        # Prompt wrapping: User kelviyoda "Answer briefly" nu sethu anupurom
+        response = model.generate_content(f"Answer in 1 to 10 line: {user_input}")
         
         if response and response.text:
-            # Response-ah trim panni clean-ah tharom
             return response.text.strip()
         else:
-            return "Could you please rephrase your question about GAC Karur?"
+            return "I am here to help with GAC Karur details." # Clean fallback
             
     except Exception as e:
-        print(f"Error: {e}")
-        # Screenshot (2)-la neenga vachurukura fallback message
-        return "I am trained to answer questions about GAC Karur courses and admissions."
+        print(f"Gemini Error: {e}")
+        return "I am trained to answer questions about GAC Karur."
 
     # 3. DATABASE ENGINE
 def init_db():
