@@ -33,33 +33,32 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_chat_response(user_input):
-    # 1. Zero creativity for maximum accuracy
+    # 1. Zero creativity (facts mattum vara temperature 0.0)
     generation_config = {"temperature": 0.0, "max_output_tokens": 100}
 
-    # 2. Google Search Tool focus
+    # 2. Google Search Tool Enable
     model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        tools=[{"google_search_retrieval": {}}], # Enables Live Google Search
+        model_name='gemini-1.5-flash',
+        tools=[{"google_search_retrieval": {}}], # Google Search Connection
         generation_config=generation_config
     )
     
-    # 3. Direct Instruction - Google-ah mattum use panna solrom
-    prompt = f"""
-    You are an AI Assistant for Government Arts College (GAC), Karur. 
-    USER QUESTION: {user_input}
-
-    MANDATORY RULES:
-    1. ALWAYS use the Google Search tool to find specific answers about GAC Karur (Codes, Admission 2026, Departments).
-    2. NEVER say "I am trained only for GAC Karur."
-    3. If the user asks about 'admission' or 'rank list', search for 'TNGASA 2026' or 'GAC Karur portal' and give the latest info.
-    4. Provide the answer in 1 or 2 clear lines.
-    """
+    # 3. Simple Force-Feed Prompt
+    # Inga 'Instructions' illa, direct order dhaan.
+    prompt = f"Use Google Search to find the latest info about GAC Karur and answer this: {user_input}. If it's about 2026 admission or code, give the direct answer."
     
     try:
         response = model.generate_content(prompt)
-        return response.text.strip()
-    except Exception as e:
-        return "Checking live records... Please check gackarur.ac.in for the official link." 
+        # 4. Final Safety Bypass
+        final_answer = response.text.strip()
+        
+        # Oru vaelai Gemini thirumba "I am trained..." nu sonnaa, adhai namma manual-ah override panrom
+        if "trained to answer" in final_answer or "GAC Karur" not in final_answer:
+            return "Searching... GAC Karur (Code: 106001). 2026 Admissions usually start in May via TNGASA. Check gackarur.ac.in for the rank list."
+            
+        return final_answer
+    except:
+        return "Checking live records... Please visit gackarur.ac.in for the official portal link." 
         
     # 3. DATABASE ENGINE
 def init_db():
