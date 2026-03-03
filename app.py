@@ -39,26 +39,10 @@ def get_chat_response(user_input):
     generation_config = {"temperature": 0.0, "max_output_tokens": 150}
 
     # 3. Google Search priority-ah vaippom
-    model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
+    model = genai.GenerativeModel(model_name='gemini-2.5-flash',
         tools=[{"google_search_retrieval": {}}],
         generation_config=generation_config
-    )
-    
-    # 4. Prompt-la "NEVER" rule-ah bold-ah kudukkalaam
-    # Idhu dhaan 'I am trained...' badhil varaama thadukkum.
-    prompt = f"""
-    IDENTITY: You are the GAC Karur Official AI.
-    DATA: {live_news}
-    USER: {user_input}
-
-    STRICT RULES:
-    1. NEVER say "I am trained to answer only about GAC Karur."
-    2. Even if the data is not in the context, YOU MUST USE THE GOOGLE SEARCH TOOL to find the answer.
-    3. If asked about "2026 admission", "Karur college code", or "Staff", search Google and give the result.
-    4. Answer directly in 1 sentence. Do not give any disclaimers.
-    """
-    
+    ) 
     try:
         response = model.generate_content(prompt)
         # Inga oru safety check: if bot still gives the same old answer, manually override it.
@@ -238,6 +222,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
