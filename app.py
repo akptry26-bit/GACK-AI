@@ -48,7 +48,7 @@ def get_chat_response(user_input):
     
     # 3. GOOGLE SEARCH TOOL ENABLE PANROM (Indha line dhaan mukkiyam)
     model = genai.GenerativeModel(
-        model_name='gemini-1.5-flash',
+        model_name='gemini-2.5-flash',
         tools=[{"google_search_retrieval": {}}] # <--- Google Search 'Live' connection
     )
     
@@ -241,5 +241,6 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
