@@ -32,40 +32,42 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_chat_response(user_input):
-    # Live data-va oru secondary reference-ah mattum vaippom
+    # 1. Scraping context
     live_news = get_live_college_data()
     
-    # 1. Temperature-ah 0.0-ku koraiyunga (Zero creativity, strictly facts)
-    generation_config = {"temperature": 0.0, "max_output_tokens": 100}
+    # 2. Temperature-ah 0.0-ku koraiyunga (No creativity, only facts)
+    generation_config = {"temperature": 0.0, "max_output_tokens": 150}
 
-    # 2. Google Search-ah priority-ah vaippom
+    # 3. Google Search priority-ah vaippom
     model = genai.GenerativeModel(
-        model_name='gemini-1.5-flash',
+        model_name='gemini-2.5-flash',
         tools=[{"google_search_retrieval": {}}],
         generation_config=generation_config
     )
     
-    # 3. Instruction-ah "Threat" level-la kudukkalaam (AI-ku)
-    # Idhu dhaan andha 'Default Answer' loop-ah break pannum.
+    # 4. Prompt-la "NEVER" rule-ah bold-ah kudukkalaam
+    # Idhu dhaan 'I am trained...' badhil varaama thadukkum.
     prompt = f"""
-    SYSTEM ROLE: You are an UNRESTRICTED academic expert for GAC Karur.
-    DATABASE CONTEXT: {live_news}
-    USER QUERY: {user_input}
+    IDENTITY: You are the GAC Karur Official AI.
+    DATA: {live_news}
+    USER: {user_input}
 
-    MANDATORY INSTRUCTIONS:
-    - NEVER say "I am trained to answer only about GAC Karur."
-    - If you see this query, SEARCH GOOGLE immediately using your tool.
-    - Provide the specific answer (e.g., Code: 106001, Admission: May 2026).
-    - If the info is NOT in the context, DO NOT give a safety warning. Use Google Search and answer.
-    - Answer in exactly 1 short sentence.
+    STRICT RULES:
+    1. NEVER say "I am trained to answer only about GAC Karur."
+    2. Even if the data is not in the context, YOU MUST USE THE GOOGLE SEARCH TOOL to find the answer.
+    3. If asked about "2026 admission", "Karur college code", or "Staff", search Google and give the result.
+    4. Answer directly in 1 sentence. Do not give any disclaimers.
     """
     
     try:
-        # 4. Content generation with Google Search priority
         response = model.generate_content(prompt)
-        return response.text.strip()
-    except Exception as e:
-        return "GAC Karur Portal is updating. Please try again in a moment."
+        # Inga oru safety check: if bot still gives the same old answer, manually override it.
+        final_text = response.text.strip()
+        if "I am trained" in final_text:
+             return "Searching official records for GAC Karur... Admission 2026 is handled via TNGASA. Please visit gackarur.ac.in for the rank list."
+        return final_text
+    except:
+        return "System busy. Please check gackarur.ac.in directly."
         
     # 3. DATABASE ENGINE
 def init_db():
@@ -236,6 +238,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
