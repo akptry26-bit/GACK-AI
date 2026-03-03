@@ -35,16 +35,22 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 def get_live_college_data():
     try:
         url = "https://gackarur.ac.in/"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=7) # Wait 7 seconds for full load
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # News and marquee-ah mattum edukkama, full page text-ah brief-ah scan panna solluvom
-        # Idhu 'Morning/Afternoon' timing loop-ah break pannum
-        updates = [item.get_text().strip() for item in soup.find_all(['marquee', 'p', 'li']) if len(item.text) > 20]
-        return " | ".join(updates[:5]) # Only top 5 short updates
-    except:
-        return ""
-def get_chat_response(user_input):
+        # 1. Title and Metadata analyze panrom
+        page_title = soup.title.string if soup.title else "GAC Karur"
+        
+        # 2. Main content tags (h1, h2, h3) analyze panrom - idhu dhaan mukkiyam
+        headers = [h.get_text().strip() for h in soup.find_all(['h1', 'h2', 'h3']) if len(h.text) > 5]
+        
+        # 3. Latest News (Marquee)
+        news = [n.get_text().strip() for n in soup.find_all('marquee') if len(n.text) > 10]
+        
+        full_analysis = f"Page: {page_title}. Topics: {', '.join(headers[:5])}. News: {', '.join(news[:3])}"
+        return full_analysis
+    except Exception as e:
+        return "GAC Karur Portal."def get_chat_response(user_input):
     # 2. Live data-va fetch panrom
     live_news = get_live_college_data()
     
@@ -251,6 +257,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
