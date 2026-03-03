@@ -28,19 +28,32 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 
 model = genai.GenerativeModel('gemini-2.5-flash')
 
+
 def get_chat_response(user_input):
     try:
-        # Prompt wrapping: User kelviyoda "Answer briefly" nu sethu anupurom
-        response = model.generate_content(f"Answer in 1 to 10 line: {user_input}")
-        
-        if response and response.text:
-            return response.text.strip()
-        else:
-            return "I am here to help with GAC Karur details." # Clean fallback
-            
+        # 1. Google Search tool-ah enable panrom
+        # Idhu dhaan Gemini-ah Google-la irundhu thagaval edukka vaikum
+        model = genai.GenerativeModel(
+            model_name='gemini-2.5-flash',
+            tools=[{"google_search_retrieval": {}}] 
+        )
+
+        # 2. Instruction to follow Google Snippet style
+        prompt = f"""
+        Act as a live search assistant. Search for: {user_input}
+        If it's about Tamil Nadu college admissions 2026, provide the latest dates.
+        Structure the answer like a Google Snippet with:
+        - A short summary
+        - Bullet points for key details
+        - Bold dates and links
+        """
+
+        response = model.generate_content(prompt)
+        return response.text.strip()
+
     except Exception as e:
-        print(f"Gemini Error: {e}")
-        return "I am trained to answer questions about GAC Karur."
+        # Fallback message from your logic
+        return "I am trained to answer questions about GAC Karur admissions."
 
     # 3. DATABASE ENGINE
 def init_db():
