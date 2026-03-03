@@ -8,12 +8,10 @@ from thefuzz import process, fuzz
 import requests
 from bs4 import BeautifulSoup
 
-
 # 1. INITIALIZATION & SECURITY
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = 'GAC_CORE_AI_2026_SECURE_KEY' # session handle panna idhu mukkiyam
-
 
 # Admin Credentials
 ADMIN_USER = "admin"
@@ -238,6 +236,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
