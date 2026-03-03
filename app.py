@@ -47,11 +47,19 @@ def get_chat_response(user_input):
     # 2. Live data-va fetch panrom
     live_news = get_live_college_data()
     
-    # 3. GOOGLE SEARCH TOOL ENABLE PANROM (Indha line dhaan mukkiyam)
+    # --- INGA DHAAN MATRATHAM ---
+    # Short-ah badhil vara indha config add panrom
+    generation_config = {
+        "temperature": 0.3,
+        "max_output_tokens": 80,  # Strict Limit: Idhu dhaan length-ah kuraikkum
+    }
+
     model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        tools=[{"google_search_retrieval": {}}] # <--- Google Search 'Live' connection
+        model_name='gemini-1.5-flash', # Note: Use 1.5-flash for stability
+        tools=[{"google_search_retrieval": {}}],
+        generation_config=generation_config # Inga config-ah connect panrom
     )
+
     
     # 4. Prompt with Instructions
     prompt = f"""
@@ -63,9 +71,10 @@ def get_chat_response(user_input):
     
     INSTRUCTIONS:
     1. First, check if the answer is in the 'CONTEXT FROM COLLEGE WEBSITE' above.
-    2. If NOT, use your Google Search tool to find the latest 2026 admission news for Tamil Nadu Govt Arts Colleges.
-    3. Format your response with bullet points and bold text like a Google snippet.
-    4. If it's about a Rank List, explicitly mention if it's available on gackarur.ac.in.
+    2. Answer strictly in 1 or 2 short lines
+    3. If NOT, use your Google Search tool to find the latest 2026 admission news for Tamil Nadu Govt Arts Colleges.
+    4. Format your response with bullet points and bold text like a Google snippet.
+    5. If it's about a Rank List, explicitly mention if it's available on gackarur.ac.in.
     """
     
     try:
@@ -73,6 +82,7 @@ def get_chat_response(user_input):
         return response.text.strip()
     except Exception as e:
         return "I'm having trouble connecting. Please check gackarur.ac.in directly."
+        
     # 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
@@ -242,6 +252,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
