@@ -50,7 +50,9 @@ def get_live_college_data():
         full_analysis = f"Page: {page_title}. Topics: {', '.join(headers[:5])}. News: {', '.join(news[:3])}"
         return full_analysis
     except Exception as e:
-        return "GAC Karur Portal."def get_chat_response(user_input):
+        return "GAC Karur Portal."
+    
+    def get_chat_response(user_input):
     # 2. Live data-va fetch panrom
     live_news = get_live_college_data()
     
@@ -257,6 +259,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
