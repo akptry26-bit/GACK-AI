@@ -32,7 +32,7 @@ model = genai.GenerativeModel('gemini-1.5-pro')
 def get_chat_response(user_input):
     # 1. Google Search tool enable panrom
     model = genai.GenerativeModel(
-        model_name='gemini-1.5-pro', 
+        model_name='gemini-1.5-flash', # Or 'gemini-1.5-pro'
         tools=[{"google_search_retrieval": {}}] 
     )
 
