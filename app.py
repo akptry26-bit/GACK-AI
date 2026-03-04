@@ -24,15 +24,9 @@ else:
     genai.configure(api_key=api_key)
 
 GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts College, Karur. If users ask unrelated questions, politely tell them you only handle college queries."
-
-# 1. API Key - Replace yours
-
+
 
 model = genai.GenerativeModel('gemini-2.5-flash')
-
-# 1. API Configuration
-api_key = os.environ.get('GEMINI_API_KEY')
-genai.configure(api_key=api_key)
 
 
 # API Key initialization
