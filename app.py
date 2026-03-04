@@ -32,33 +32,30 @@ model = genai.GenerativeModel('gemini-1.5-pro')
 
 def get_chat_response(user_input):
     try:
-        # Try without prefix first, then with prefix if it fails
-        model_name = 'gemini-1.5-flash' 
-        
+        # 1. FIXED: models/ prefix and '-latest' suffix for stability
+        # Idhu dhaan 404 error-ah kill pannum
         model = genai.GenerativeModel(
-            model_name=model_name,
+            model_name='models/gemini-1.5-flash-latest',
             tools=[{"google_search_retrieval": {}}]
         )
 
-        prompt = f"Search Google and answer for GAC Karur: {user_input}"
+        # 2. Force the AI to use Google Search
+        prompt = f"Perform a Google Search and give me the latest 2026 update for: {user_input} (Context: Government Arts College Karur)"
+
         response = model.generate_content(prompt)
         
+        # 3. Check for grounded response (Google Search result)
         if response.text:
             return response.text.strip()
         else:
-            return "Searching live data... check gackarur.ac.in."
+            return "Searching live databases... Please check gackarur.ac.in for 2026 notifications."
 
     except Exception as e:
-        # 404 vandha alternate identifier try pannuvom
-        if "404" in str(e):
-            try:
-                model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
-                response = model.generate_content(user_input)
-                return response.text
-            except:
-                return "System Updating... Please try again in a moment."
-        return f"Gemini API Error: {str(e)}"        
-    # 3. DATABASE ENGINE
+        # Error vandha real reason-ah kaatum, 'System Updating' nu poi solladhu
+        return f"Gemini Search Error: {str(e)}"
+        
+
+# 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
     c = conn.cursor()
@@ -194,6 +191,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
