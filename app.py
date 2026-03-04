@@ -74,52 +74,24 @@ def init_db():
 
 init_db()
 
-@app.route('/ask', methods=['POST'])
-def ask():
-    try:
-        user_message = request.json.get('message')
-        
-        # Simple test to check if AI is alive
-        response = model.generate_content(user_message)
-        
-        if response and hasattr(response, 'text'):
-            return jsonify({"reply": response.text})
-        else:
-            # Response vandhu text illana (Safety filter block)
-            return jsonify({"reply": "I am unable to answer this specific query. Please ask about GAC Karur."})
-            
-    except Exception as e:
-        print(f"DEBUG ERROR: {str(e)}") # Terminal-la error paaka
-        return jsonify({"reply": "Connectivity issue. Please check your internet or API key."})
-
-# 4. CHATBOT CORE LOGIC (DB First, API Second)
+# --- PHASE 4: CHATBOT CORE LOGIC (DB First, API Second) ---
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
         data = request.get_json()
         user_msg = data.get('message', '').strip().lower()
         
-        # --- PHASE 0: Instant Response (Greetings) ---
-        # Database-ku munnadiye idhu check pannum, so fast-ah irukkum
+        # 1. Greetings Phase
         greetings_map = {
-            "hi": "Hello! Welcome to GAC CORE AI. How can I help you today?",
-        "hello": "Hi there! I am your GAC Karur digital assistant. Ask me anything!",
-        "hey": "Hey! GAC-karur AI online. What's on your mind?",
-        "gm": "Good Morning! Wishing you a wonderful and productive day at GAC Karur.",
-        "good morning": "Good Morning! Hope you have a great day ahead!",
-        "gn": "Good Night! Rest well. I'll be here if you need anything tomorrow.",
-        "good night": "Good Night! Sleep well. System entering low-power mode.",
-        
-        "thank you": "You're very welcome! Glad I could help.",
-        "thanks": "No problem! Happy to assist a GAC student."
+            "hi": "Hello! Welcome to GAC CORE AI.",
+            "hello": "Hi there! I am your GAC Karur digital assistant.",
+            "hey": "Hey! GAC-karur AI online."
         }
-
-        
         if user_msg in greetings_map:
             reply = greetings_map[user_msg]
             return jsonify({"status": "success", "reply": reply})
 
-        # --- PHASE 1: DB Search ---
+        # 2. Database Phase
         conn = sqlite3.connect('college_bot.db')
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
@@ -129,59 +101,23 @@ def chat():
         reply = None
         if knowledge_dict:
             best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-            if score > 75: 
+            if score > 80: 
                 reply = knowledge_dict[best_match]
 
-        # --- PHASE 2: GOOGLE SEARCH + GEMINI (MAIN FIX) ---
-        # Neenga ezhudhuna 'get_chat_response' function-ah inga trigger panrom
+        # 3. Gemini + Google Search Phase (Triggering your get_chat_response function)
         if not reply:
             try:
-                reply = get_chat_response(user_msg)
+                # Idhu dhaan unga Phase 2 logic-ah trigger pannum
+                reply = get_chat_response(user_msg) 
             except Exception as e:
                 print(f"API Error: {e}")
-                reply = "GAC Portal is busy. Admission 2026 starts in May. Check gackarur.ac.in."
-
-        # Logging and Return
-        c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
-                  (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
-        conn.commit()
-        conn.close()
-        return jsonify({"status": "success", "reply": reply})
-        
-    except Exception as e:
-        return jsonify({"status": "error", "reply": "Thinking... try again!"}), 500
-                      (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
-            conn.commit()
-            conn.close()
-            return jsonify({"status": "success", "reply": reply})
-
-        # --- PHASE 1: Local Knowledge Base Search (Existing Code) ---
-        conn = sqlite3.connect('college_bot.db')
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        
-        knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
-        knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
-        
-        reply = None
-        if knowledge_dict:
-            best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-            if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
-                reply = knowledge_dict[best_match]
-
-        # Phase 2: Gemini AI
-        if not reply and model:
-            try:
-                response = model.generate_content(user_msg)
-                reply = response.text
-            except:
                 reply = None
 
-        # Phase 3: Final Fallback
+        # 4. Final Fallback (Simplified - No restrictive text)
         if not reply:
-            reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
+            reply = "I'm looking into this. Please check gackarur.ac.in for the 2026 academic calendar."
 
-        # Logging
+        # 5. Logging (FIXED INDENTATION HERE - No more Status 1 Error)
         c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
                   (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
         conn.commit()
@@ -190,8 +126,9 @@ def chat():
         return jsonify({"status": "success", "reply": reply})
         
     except Exception as e:
-        print(f"Error: {e}") # Terminal-la enna error-nu paakka
+        # Unexpected errors handling
         return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
+
 
 # 5. ADMIN PANEL & LOGIN LOGIC
 @app.route('/admin-login', methods=['GET', 'POST'])
