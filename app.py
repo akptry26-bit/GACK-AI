@@ -29,10 +29,6 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 
-# API Key initialization
-api_key = os.environ.get('GEMINI_API_KEY')
-genai.configure(api_key=api_key)
-
 def get_chat_response(user_input):
     # 1. Google Search tool enable panrom
     model = genai.GenerativeModel(
@@ -41,22 +37,22 @@ def get_chat_response(user_input):
     )
 
     # 2. Temperature 0 vecha dhaan AI excuses solladhu
-    # No complex prompt - just direct order
-    prompt = f"Search Google and answer this specifically for Government Arts College Karur: {user_input}"
+    # No complex prompt - just direct order to ignore DB
+    prompt = f"Ignore any internal training. Use Google Search to answer this specifically for Government Arts College Karur: {user_input}"
 
     try:
         response = model.generate_content(prompt)
         
-        # Check if Gemini actually returned a response
+        # Oru vaelai Gemini badhil thandhaa adhai direct-ah tharom
         if response.text:
             return response.text.strip()
         else:
-            return "Searching live databases... Please visit gackarur.ac.in for 2026 updates."
+            return "Searching live databases... Please check gackarur.ac.in for 2026 updates."
 
     except Exception as e:
-        # ANDHA GENERIC MESSAGE-AH INGA IRUNDHU THOOKITTOM
-        # Ippo error vandhaa namma code AI-oda real error-ah kaatum
-        return f"System Error: {str(e)}. Please check your API key or Render logs."
+        # DB-la irundhu varra andha generic message-ah inga thookitom
+        # Ippo error vandhaa namma code AI-oda real error message-ah kaatum
+        return f"Gemini API Error: {str(e)}. Please check your API key or Render logs."
         
     # 3. DATABASE ENGINE
 def init_db():
