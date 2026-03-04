@@ -13,10 +13,16 @@
     --text-high: #1c1e21;    
     --text-dim: #606770;     
     
-    /* --- Messaging Elements (Floating Glass Look) --- */
-    --border: #edf2f7;       
-    --ai-msg: #ffffff;       
-    --user-msg: linear-gradient(135deg, #0b57d0 0%, #007aff 100%); /* Premium Gradient */
+/* --- Messaging Elements (Ultra-Premium Update) --- */
+    --border: rgba(0, 0, 0, 0.04);       /* Transparent border for glass feel */
+    --ai-msg: #ffffff;                  /* Solid white for contrast */
+    
+    /* User Message: Deep Royal Gradient with Glow */
+    --user-msg: linear-gradient(135deg, #0b57d0 0%, #1a73e8 50%, #0051cc 100%);
+    
+    /* Dynamic Shadows for Depth */
+    --bot-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.06), 0 2px 6px -2px rgba(0, 0, 0, 0.03);
+    --user-shadow: 0 10px 20px -5px rgba(11, 87, 208, 0.3);
     
     /* --- Interactive --- */
     --hover-bg: #f8fafc;
@@ -159,5 +165,6 @@ body { background: var(--bg-deep); height: 100vh; overflow: hidden; display: fle
     .app-header { padding: 5px 20px; }
     .suggestion-ribbon { display: none; } /* Space save panna */
 }
+
 
 
