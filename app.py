@@ -117,42 +117,55 @@ def chat():
 
         if user_msg in greetings_map:
             reply = greetings_map[user_msg]
-            # Log panniye aaganum admin-ku theriya
-            conn = sqlite3.connect('college_bot.db')
-            c = conn.cursor()
-            c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
-                      (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
-            conn.commit()
-            conn.close()
-            return jsonify({"status": "success", "reply": reply})
 
-        # --- PHASE 1: Local Knowledge Base Search (Existing Code) ---
-        conn = sqlite3.connect('college_bot.db')
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        
-        knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
-        knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
-        
-        reply = None
-        if knowledge_dict:
-            best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-            if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
-                reply = knowledge_dict[best_match]
-
-        # Phase 2: Gemini AI
-        if not reply and model:
-            try:
-                response = model.generate_content(user_msg)
-                reply = response.text
-            except:
-                reply = None
-
-        # Phase 3: Final Fallback
+        # --- PHASE 1: Local Database (GAC Karur Specific) ---
         if not reply:
-            reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
+            conn = sqlite3.connect('college_bot.db')
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
+            knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
+            
+            if knowledge_dict:
+                # User msg-ku DB-la answer irukka nu paarkkum
+                best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
+                if score > 85: 
+                    reply = knowledge_dict[best_match]
 
-        # Logging
+        # --- PHASE 2: GOOGLE SEARCH (Live Data 2026) ---
+        if not reply:
+            try:
+                # Dynamic date to push for 2026 results
+                curr_date = datetime.now().strftime("%B %d, 2026")
+                
+                # models/ prefix and -latest suffix is MUST to avoid 404
+                search_model = genai.GenerativeModel(
+                    model_name='models/gemini-1.5-flash-latest',
+                    tools=[{"google_search_retrieval": {}}]
+                )
+                
+                # Mandatory prompt to bypass 2024 training data
+                prompt = (
+                    f"Today's Date is {curr_date}. "
+                    f"MANDATORY: Use Google Search tool for current info. "
+                    f"If the query is about GAC Karur, find 2026 updates. "
+                    f"If general, answer using Google. Question: {user_msg}"
+                )
+                
+                response = search_model.generate_content(prompt)
+                if response.text:
+                    reply = response.text.strip()
+            except Exception as e:
+                print(f"Search Tool Error: {e}")
+
+        # --- PHASE 3: FINAL FALLBACK (Professional) ---
+        # Inga dhaan neenga sonna andha "I am trained to..." message-ah thookittom!
+        if not reply:
+            reply = "I'm having trouble fetching live data right now. For the latest 2026 admission details, please visit https://gackarur.ac.in"
+
+        # Logging (Fixed spacing for Render build success)
+        conn = sqlite3.connect('college_bot.db')
+        c = conn.cursor()
         c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
                   (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
         conn.commit()
@@ -161,9 +174,7 @@ def chat():
         return jsonify({"status": "success", "reply": reply})
         
     except Exception as e:
-        print(f"Error: {e}") # Terminal-la enna error-nu paakka
-        return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
-
+        return jsonify({"status": "error", "reply": "Thinking... try again!"}), 500
 
 
 # 5. ADMIN PANEL & LOGIN LOGIC
@@ -226,6 +237,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
