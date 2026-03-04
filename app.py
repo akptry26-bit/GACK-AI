@@ -114,12 +114,42 @@ def chat():
         "thanks": "No problem! Happy to assist a GAC student."
         }
 
+        
         if user_msg in greetings_map:
             reply = greetings_map[user_msg]
-            # Log panniye aaganum admin-ku theriya
-            conn = sqlite3.connect('college_bot.db')
-            c = conn.cursor()
-            c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
+            return jsonify({"status": "success", "reply": reply})
+
+        # --- PHASE 1: DB Search ---
+        conn = sqlite3.connect('college_bot.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
+        knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
+        
+        reply = None
+        if knowledge_dict:
+            best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
+            if score > 75: 
+                reply = knowledge_dict[best_match]
+
+        # --- PHASE 2: GOOGLE SEARCH + GEMINI (MAIN FIX) ---
+        # Neenga ezhudhuna 'get_chat_response' function-ah inga trigger panrom
+        if not reply:
+            try:
+                reply = get_chat_response(user_msg)
+            except Exception as e:
+                print(f"API Error: {e}")
+                reply = "GAC Portal is busy. Admission 2026 starts in May. Check gackarur.ac.in."
+
+        # Logging and Return
+        c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
+                  (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success", "reply": reply})
+        
+    except Exception as e:
+        return jsonify({"status": "error", "reply": "Thinking... try again!"}), 500
                       (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
             conn.commit()
             conn.close()
