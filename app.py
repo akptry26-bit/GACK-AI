@@ -33,14 +33,20 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_ai_response(user_input):
     try:
+        current_date = datetime.now().strftime("%B %d, %y")
         # STEP 1: GOOGLE SEARCH FIRST (Live Data)
         # Using models/ prefix to prevent v1beta 404
         search_model = genai.GenerativeModel(
             model_name='models/gemini-2.5-flash',
             tools=[{"google_search_retrieval": {}}]
         )
+        # 3. DYNAMIC PROMPT: Inga f-string moolamaa current_date auto-ah update aagum
+        prompt = (
+            f"Today's Date: {current_date}. "
+            f"Use Google Search to fetch ONLY LIVE and CURRENT data for today. "
+            f"Question: {user_input}"
+        )
         
-        search_prompt = f"Perform a Google Search and give a direct answer for: {user_input}"
         response = search_model.generate_content(search_prompt)
         
         if response.text:
@@ -232,6 +238,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
