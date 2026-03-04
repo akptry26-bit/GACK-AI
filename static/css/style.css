@@ -1,28 +1,27 @@
-/* --- MODERN NEON ECOSYSTEM --- */
-.light-mode {
-    /* --- Core Surfaces --- */
-    --bg-deep: #fdfdfd;       /* Ultra clean white-grey background */
-    --surface: #ffffff;      /* Pure white for chat container */
+:root {
+    /* --- Core Surfaces (Updated for Premium Depth) --- */
+    --bg-deep: #f4f7fa;       /* Soft architectural grey */
+    --surface: #ffffff;      
     
-    /* --- Brand & Action --- */
-    --accent: #0b57d0;       /* Official Google Blue for trust */
-    --accent-glow: 0 0 20px rgba(11, 87, 208, 0.15);
-    --online-green: #10b981; /* For that neural system pulse */
+    /* --- Brand & Action (Enhanced Neon Accents) --- */
+    --accent: #0b57d0;       
+    --accent-glow: 0 8px 25px rgba(11, 87, 208, 0.25);
+    --neon-blue: #00d2ff;     /* Subtly added for high-tech accents */
+    --online-green: #10b981; 
     
-    /* --- Typography (High Readability) --- */
-    --text-high: #111827;    /* Deep charcoal for main text */
-    --text-dim: #4b5563;     /* Muted grey for timestamps/meta */
+    /* --- Typography --- */
+    --text-high: #1c1e21;    
+    --text-dim: #606770;     
     
-    /* --- Messaging Elements --- */
-    --border: #f1f3f4;       /* Subtle borders for a 'borderless' feel */
-    --ai-msg: #f8f9fa;       /* Very soft grey for bot bubbles */
-    --user-msg: #e7f0fe;     /* Very light blue for user bubbles */
+    /* --- Messaging Elements (Floating Glass Look) --- */
+    --border: #edf2f7;       
+    --ai-msg: #ffffff;       
+    --user-msg: linear-gradient(135deg, #0b57d0 0%, #007aff 100%); /* Premium Gradient */
     
     /* --- Interactive --- */
-    --hover-bg: #f1f5f9;
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
+    --hover-bg: #f8fafc;
+    --shadow-premium: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
 }
-
 /* --- CORE ARCHITECTURE --- */
 
 body { background: var(--bg-deep); height: 100vh; overflow: hidden; display: flex; justify-content: center; }
@@ -160,4 +159,5 @@ body { background: var(--bg-deep); height: 100vh; overflow: hidden; display: fle
     .app-header { padding: 5px 20px; }
     .suggestion-ribbon { display: none; } /* Space save panna */
 }
+
 
