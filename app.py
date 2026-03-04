@@ -30,35 +30,53 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 # 1. API Key - Replace yours
 
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+# 1. API Configuration
+api_key = os.environ.get('GEMINI_API_KEY')
+genai.configure(api_key=api_key)
+
+def get_live_college_data():
+    try:
+        url = "https://gackarur.ac.in/"
+        response = requests.get(url, timeout=5)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # Website-la irukkura marquee and links-ah edukkurom
+        updates = [item.get_text().strip() for item in soup.find_all(['marquee', 'a']) if len(item.text) > 10]
+        return " | ".join(updates[:10]) 
+    except:
+        return "GAC Website is currently not reachable."
 
 def get_chat_response(user_input):
-    # 1. Zero creativity (facts mattum vara temperature 0.0)
-    generation_config = {"temperature": 0.0, "max_output_tokens": 100}
-
-    # 2. Google Search Tool Enable
+    # 2. Live data-va fetch panrom
+    live_news = get_live_college_data()
+    
+    # 3. GOOGLE SEARCH TOOL ENABLE PANROM (Indha line dhaan mukkiyam)
     model = genai.GenerativeModel(
         model_name='gemini-1.5-flash',
-        tools=[{"google_search_retrieval": {}}], # Google Search Connection
-        generation_config=generation_config
+        tools=[{"google_search_retrieval": {}}] # <--- Google Search 'Live' connection
     )
     
-    # 3. Simple Force-Feed Prompt
-    # Inga 'Instructions' illa, direct order dhaan.
-    prompt = f"Use Google Search to find the latest info about GAC Karur and answer this: {user_input}. If it's about 2026 admission or code, give the direct answer."
+    # 4. Prompt with Instructions
+    prompt = f"""
+    You are the Official GAC Karur Assistant.
+    
+    CONTEXT FROM COLLEGE WEBSITE: {live_news}
+    
+    USER QUESTION: {user_input}
+    
+    INSTRUCTIONS:
+    1. First, check if the answer is in the 'CONTEXT FROM COLLEGE WEBSITE' above.
+    2. If NOT, use your Google Search tool to find the latest 2026 admission news for Tamil Nadu Govt Arts Colleges.
+    3. Format your response with bullet points and bold text like a Google snippet.
+    4. If it's about a Rank List, explicitly mention if it's available on gackarur.ac.in.
+    """
     
     try:
         response = model.generate_content(prompt)
-        # 4. Final Safety Bypass
-        final_answer = response.text.strip()
-        
-        # Oru vaelai Gemini thirumba "I am trained..." nu sonnaa, adhai namma manual-ah override panrom
-        if "trained to answer" in final_answer or "GAC Karur" not in final_answer:
-            return "Searching... GAC Karur (Code: 106001). 2026 Admissions usually start in May via TNGASA. Check gackarur.ac.in for the rank list."
-            
-        return final_answer
-    except:
-        return "Checking live records... Please visit gackarur.ac.in for the official portal link." 
+        return response.text.strip()
+    except Exception as e:
+        return "I'm having trouble connecting. Please check gackarur.ac.in directly."
         
     # 3. DATABASE ENGINE
 def init_db():
