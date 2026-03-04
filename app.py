@@ -24,36 +24,40 @@ else:
     genai.configure(api_key=api_key)
 
 GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts College, Karur. If users ask unrelated questions, politely tell them you only handle college queries."
-
+
+
 
 model = genai.GenerativeModel('gemini-1.5-pro')
 
 
 def get_chat_response(user_input):
-    # 1. Google Search tool enable panrom
-    model = genai.GenerativeModel(
-        model_name='models/gemini-1.5-flash', 
-        tools=[{"google_search_retrieval": {}}] 
-    )
-
-    # 2. Temperature 0 vecha dhaan AI excuses solladhu
-    # No complex prompt - just direct order to ignore DB
-    prompt = f"Ignore any internal training. Use Google Search to answer this specifically for Government Arts College Karur: {user_input}"
-
     try:
+        # Try without prefix first, then with prefix if it fails
+        model_name = 'gemini-1.5-flash' 
+        
+        model = genai.GenerativeModel(
+            model_name=model_name,
+            tools=[{"google_search_retrieval": {}}]
+        )
+
+        prompt = f"Search Google and answer for GAC Karur: {user_input}"
         response = model.generate_content(prompt)
         
-        # Oru vaelai Gemini badhil thandhaa adhai direct-ah tharom
         if response.text:
             return response.text.strip()
         else:
-            return "Searching live databases... Please check gackarur.ac.in for 2026 updates."
+            return "Searching live data... check gackarur.ac.in."
 
     except Exception as e:
-        # DB-la irundhu varra andha generic message-ah inga thookitom
-        # Ippo error vandhaa namma code AI-oda real error message-ah kaatum
-        return f"Gemini API Error: {str(e)}. Please check your API key or Render logs."
-        
+        # 404 vandha alternate identifier try pannuvom
+        if "404" in str(e):
+            try:
+                model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
+                response = model.generate_content(user_input)
+                return response.text
+            except:
+                return "System Updating... Please try again in a moment."
+        return f"Gemini API Error: {str(e)}"        
     # 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
@@ -190,6 +194,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
