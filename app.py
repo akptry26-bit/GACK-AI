@@ -31,6 +31,35 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash') 
 # Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
 
+def get_ai_response(user_input):
+    try:
+        # STEP 1: GOOGLE SEARCH FIRST (Live Data)
+        # Using models/ prefix to prevent v1beta 404
+        search_model = genai.GenerativeModel(
+            model_name='models/gemini-2.5-flash',
+            tools=[{"google_search_retrieval": {}}]
+        )
+        
+        search_prompt = f"Perform a Google Search and give a direct answer for: {user_input}"
+        response = search_model.generate_content(search_prompt)
+        
+        if response.text:
+            return response.text.strip()
+            
+    except Exception as e:
+        print(f"Google Search Failed: {e}")
+        
+        # STEP 2: GEMINI INTERNAL SECOND (Fallback)
+        try:
+            fallback_model = genai.GenerativeModel('models/gemini-2.5-flash')
+            response = fallback_model.generate_content(user_input)
+            return response.text.strip()
+        except:
+            return None
+    return None
+
+
+
 try:
     print("AI is thinking...")
     # Step 3: Minimal prompt
@@ -94,35 +123,42 @@ def chat():
 
         if user_msg in greetings_map:
             reply = greetings_map[user_msg]
+            # Log panniye aaganum admin-ku theriya
+            conn = sqlite3.connect('college_bot.db')
+            c = conn.cursor()
+            c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
+                      (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
+            conn.commit()
+            conn.close()
             return jsonify({"status": "success", "reply": reply})
 
-        # 2. Database Phase
+        # --- PHASE 1: Local Knowledge Base Search (Existing Code) ---
         conn = sqlite3.connect('college_bot.db')
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
+        
         knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
         knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
         
         reply = None
         if knowledge_dict:
             best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-            if score > 80: 
+            if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
                 reply = knowledge_dict[best_match]
 
-        # 3. Gemini + Google Search Phase (Triggering your get_chat_response function)
-        if not reply:
+        # Phase 2: Gemini AI
+        if not reply and model:
             try:
-                # Idhu dhaan unga Phase 2 logic-ah trigger pannum
-                reply = get_chat_response(user_msg) 
-            except Exception as e:
-                print(f"API Error: {e}")
+                response = model.generate_content(user_msg)
+                reply = response.text
+            except:
                 reply = None
 
-        # 4. Final Fallback (Simplified - No restrictive text)
+        # Phase 3: Final Fallback
         if not reply:
-            reply = "I'm looking into this. Please check gackarur.ac.in for the 2026 academic calendar."
+            reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
 
-        # 5. Logging (FIXED INDENTATION HERE - No more Status 1 Error)
+        # Logging
         c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
                   (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
         conn.commit()
@@ -131,8 +167,9 @@ def chat():
         return jsonify({"status": "success", "reply": reply})
         
     except Exception as e:
-        # Unexpected errors handling
+        print(f"Error: {e}") # Terminal-la enna error-nu paakka
         return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
+
 
 
 # 5. ADMIN PANEL & LOGIN LOGIC
@@ -195,6 +232,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
