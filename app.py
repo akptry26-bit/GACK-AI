@@ -5,8 +5,6 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 import google.generativeai as genai
 from dotenv import load_dotenv
 from thefuzz import process, fuzz
-import requests
-from bs4 import BeautifulSoup
 
 
 # 1. INITIALIZATION & SECURITY
@@ -30,53 +28,42 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 # 1. API Key - Replace yours
 
 
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 # 1. API Configuration
 api_key = os.environ.get('GEMINI_API_KEY')
 genai.configure(api_key=api_key)
 
-def get_live_college_data():
-    try:
-        url = "https://gackarur.ac.in/"
-        response = requests.get(url, timeout=5)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        # Website-la irukkura marquee and links-ah edukkurom
-        updates = [item.get_text().strip() for item in soup.find_all(['marquee', 'a']) if len(item.text) > 10]
-        return " | ".join(updates[:10]) 
-    except:
-        return "GAC Website is currently not reachable."
+
+# API Key initialization
+api_key = os.environ.get('GEMINI_API_KEY')
+genai.configure(api_key=api_key)
 
 def get_chat_response(user_input):
-    # 2. Live data-va fetch panrom
-    live_news = get_live_college_data()
-    
-    # 3. GOOGLE SEARCH TOOL ENABLE PANROM (Indha line dhaan mukkiyam)
-    model = genai.GenerativeModel(
-        model_name='gemini-1.5-flash',
-        tools=[{"google_search_retrieval": {}}] # <--- Google Search 'Live' connection
-    )
-    
-    # 4. Prompt with Instructions
-    prompt = f"""
-    You are the Official GAC Karur Assistant.
-    
-    CONTEXT FROM COLLEGE WEBSITE: {live_news}
-    
-    USER QUESTION: {user_input}
-    
-    INSTRUCTIONS:
-    1. First, check if the answer is in the 'CONTEXT FROM COLLEGE WEBSITE' above.
-    2. If NOT, use your Google Search tool to find the latest 2026 admission news for Tamil Nadu Govt Arts Colleges.
-    3. Format your response with bullet points and bold text like a Google snippet.
-    4. If it's about a Rank List, explicitly mention if it's available on gackarur.ac.in.
-    """
-    
     try:
+        # 1. Google Search tool-ah enable panrom
+        # Idhu dhaan Gemini-ah Google-la irundhu thagaval edukka vaikum
+        model = genai.GenerativeModel(
+            model_name='gemini-2.5-flash',
+            tools=[{"google_search_retrieval": {}}] 
+        )
+
+        # 2. Instruction to follow Google Snippet style
+        prompt = f"""
+        Act as a live search assistant. Search for: {user_input}
+        If it's about Tamil Nadu college admissions 2026, provide the latest dates.
+        Structure the answer like a Google Snippet with:
+        - A short summary
+        - Bullet points for key details
+        - Bold dates and links
+        """
+
         response = model.generate_content(prompt)
         return response.text.strip()
+
     except Exception as e:
-        return "I'm having trouble connecting. Please check gackarur.ac.in directly."
+        # Fallback message from your logic
+        return "I am trained to answer questions about GAC Karur admissions."
         
     # 3. DATABASE ENGINE
 def init_db():
