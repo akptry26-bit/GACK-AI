@@ -25,14 +25,28 @@ model = genai.GenerativeModel(
 
 # 2. GOOGLE SEARCH FUNCTION
 def get_chat_response(user_input):
-    prompt = f"Using Google Search, give a direct answer for GAC Karur: {user_input}"
     try:
-        response = model.generate_content(prompt)
-        return response.text.strip() if response.text else None
-    except Exception as e:
-        print(f"API Error: {e}")
-        return None
+        # 1. FIXED MODEL NAME: models/ prefix and '-latest' suffix for v1beta stability
+        # Idhu dhaan 404 error-ah solve pannum
+        model = genai.GenerativeModel(
+            model_name='models/gemini-1.5-flash-latest',
+            tools=[{"google_search_retrieval": {}}]
+        )
 
+        # 2. STRICT PROMPT: AI-kitta Google Search panna direct-ah solrom
+        prompt = f"Search Google and provide the latest 2026 update for: {user_input} (Context: GAC Karur)"
+
+        response = model.generate_content(prompt)
+        
+        # 3. CHECK RESPONSE: Badhil vandha direct-ah user-ku tharom
+        if response.text:
+            return response.text.strip()
+        else:
+            return "Searching live databases... Please check gackarur.ac.in for 2026 updates."
+
+    except Exception as e:
+        # Exception handling - error ennanu screen-laye kaattum
+        return f"Gemini Search Error: {str(e)}"
 # 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
@@ -135,4 +149,5 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
 
