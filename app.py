@@ -33,48 +33,36 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_ai_response(user_input):
     try:
-        current_date = datetime.now().strftime("%B %d, %y")
-        # STEP 1: GOOGLE SEARCH FIRST (Live Data)
-        # Using models/ prefix to prevent v1beta 404
-        search_model = genai.GenerativeModel(
+        current_date = datetime.now().strftime("%B %d, 2026")
+        
+        # 1. FIXED: Identifier with models/ prefix to stop 404
+        model = genai.GenerativeModel(
             model_name='models/gemini-2.5-flash',
             tools=[{"google_search_retrieval": {}}]
         )
-        # 3. DYNAMIC PROMPT: Inga f-string moolamaa current_date auto-ah update aagum
+
+        # 2. STRICT INSTRUCTION: Tell AI to ONLY use the Search Tool.
+        # Screenshot (15)-la vandha 2024 data-vah idhu dhaan block pannum.
         prompt = (
-            f"Today's Date: {current_date}. "
-            f"Use Google Search to fetch ONLY LIVE and CURRENT data for today. "
-            f"Question: {user_input}"
+            f"Current Date is {current_date}. "
+            f"MANDATORY: Use the Google Search tool to find the LATEST info for 2026. "
+            f"IGNORE your internal training data from 2024. Question: {user_input}"
         )
+
+        # 3. Generate content with the search tool active
+        response = model.generate_content(prompt)
         
-        response = search_model.generate_content(search_prompt)
-        
+        # AI badhil sollumbodhu web results push aagum
         if response.text:
             return response.text.strip()
             
     except Exception as e:
-        print(f"Google Search Failed: {e}")
-        
-        # STEP 2: GEMINI INTERNAL SECOND (Fallback)
-        try:
-            fallback_model = genai.GenerativeModel('models/gemini-2.5-flash')
-            response = fallback_model.generate_content(user_input)
-            return response.text.strip()
-        except:
-            return None
-    return None
+        print(f"Search failed, trying internal: {e}")
+        # Fallback to simple generation if search tool crashes
+        model_simple = genai.GenerativeModel('models/gemini-2.5-flash')
+        res = model_simple.generate_content(user_input)
+        return res.text.strip()
 
-
-
-try:
-    print("AI is thinking...")
-    # Step 3: Minimal prompt
-    response = model.generate_content("Hello")
-    print("Response from AI:", response.text)
-except Exception as e:
-    # Indha error ennanu sonna dhaan nanba kandu pudikka mudiyum
-    print(f"FAILED: {e}")
-    
     # 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
@@ -238,6 +226,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
