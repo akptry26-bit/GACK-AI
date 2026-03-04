@@ -94,42 +94,47 @@ def chat():
 
         if user_msg in greetings_map:
             reply = greetings_map[user_msg]
-            # Log panniye aaganum admin-ku theriya
+
+        # --- PHASE 1: Database Search (Local) ---
+        if not reply:
             conn = sqlite3.connect('college_bot.db')
+            conn.row_factory = sqlite3.Row
             c = conn.cursor()
-            c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
-                      (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
-            conn.commit()
-            conn.close()
-            return jsonify({"status": "success", "reply": reply})
+            knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
+            knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
+            
+            if knowledge_dict:
+                best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
+                if score > 80: 
+                    reply = knowledge_dict[best_match]
 
-        # --- PHASE 1: Local Knowledge Base Search (Existing Code) ---
-        conn = sqlite3.connect('college_bot.db')
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        
-        knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
-        knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
-        
-        reply = None
-        if knowledge_dict:
-            best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-            if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
-                reply = knowledge_dict[best_match]
-
-        # Phase 2: Gemini AI
-        if not reply and model:
+        # --- PHASE 2: GOOGLE SEARCH + GEMINI (Global Fix) ---
+        if not reply:
             try:
-                response = model.generate_content(user_msg)
-                reply = response.text
-            except:
+                # FIXED: 404 varaama irukka specific identifier
+                search_model = genai.GenerativeModel(
+                    model_name='models/gemini-1.5-flash-latest',
+                    tools=[{"google_search_retrieval": {}}]
+                )
+                
+                # AI-kitta strict-ah "Google-la search pannu" nu solrom
+                prompt = f"Search Google and give a direct answer for: {user_input} (specifically for GAC Karur if relevant)"
+                response = search_model.generate_content(prompt)
+                
+                if response.text:
+                    reply = response.text.strip()
+            except Exception as e:
+                print(f"Gemini API Error: {e}")
                 reply = None
 
-        # Phase 3: Final Fallback
+        # --- PHASE 3: FINAL FALLBACK (No more dummy messages) ---
         if not reply:
-            reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
+            # Unga screenshot (13)-la vandha andha restrictive message-ah thookittaen
+            reply = "I'm currently unable to fetch live data. Please visit gackarur.ac.in for official 2026 updates."
 
-        # Logging
+        # Logging (Fixed spacing to avoid IndentationError)
+        conn = sqlite3.connect('college_bot.db')
+        c = conn.cursor()
         c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
                   (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
         conn.commit()
@@ -138,9 +143,8 @@ def chat():
         return jsonify({"status": "success", "reply": reply})
         
     except Exception as e:
-        print(f"Error: {e}") # Terminal-la enna error-nu paakka
-        return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
-
+        print(f"Critical Error: {e}")
+        return jsonify({"status": "error", "reply": "Thinking... try again!"}), 500
 # 5. ADMIN PANEL & LOGIN LOGIC
 @app.route('/admin-login', methods=['GET', 'POST'])
 def login():
@@ -201,3 +205,4 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
