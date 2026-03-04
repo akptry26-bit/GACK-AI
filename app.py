@@ -113,7 +113,7 @@ def chat():
             try:
                 # FIXED: 404 varaama irukka specific identifier
                 search_model = genai.GenerativeModel(
-                    model_name='models/gemini-1.5-flash-latest',
+                    model_name='models/gemini-2.5-flash',
                     tools=[{"google_search_retrieval": {}}]
                 )
                 
@@ -205,4 +205,5 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
