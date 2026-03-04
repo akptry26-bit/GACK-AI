@@ -34,30 +34,29 @@ api_key = os.environ.get('GEMINI_API_KEY')
 genai.configure(api_key=api_key)
 
 def get_chat_response(user_input):
+    # 1. Google Search tool enable panrom
+    model = genai.GenerativeModel(
+        model_name='gemini-1.5-flash',
+        tools=[{"google_search_retrieval": {}}] 
+    )
+
+    # 2. Temperature 0 vecha dhaan AI excuses solladhu
+    # No complex prompt - just direct order
+    prompt = f"Search Google and answer this specifically for Government Arts College Karur: {user_input}"
+
     try:
-        # 1. Google Search tool-ah enable panrom
-        # Idhu dhaan Gemini-ah Google-la irundhu thagaval edukka vaikum
-        model = genai.GenerativeModel(
-            model_name='gemini-2.5-flash',
-            tools=[{"google_search_retrieval": {}}] 
-        )
-
-        # 2. Instruction to follow Google Snippet style
-        prompt = f"""
-        Act as a live search assistant. Search for: {user_input}
-        If it's about Tamil Nadu college admissions 2026, provide the latest dates.
-        Structure the answer like a Google Snippet with:
-        - A short summary
-        - Bullet points for key details
-        - Bold dates and links
-        """
-
         response = model.generate_content(prompt)
-        return response.text.strip()
+        
+        # Check if Gemini actually returned a response
+        if response.text:
+            return response.text.strip()
+        else:
+            return "Searching live databases... Please visit gackarur.ac.in for 2026 updates."
 
     except Exception as e:
-        # Fallback message from your logic
-        return "I am trained to answer questions about GAC Karur admissions."
+        # ANDHA GENERIC MESSAGE-AH INGA IRUNDHU THOOKITTOM
+        # Ippo error vandhaa namma code AI-oda real error-ah kaatum
+        return f"System Error: {str(e)}. Please check your API key or Render logs."
         
     # 3. DATABASE ENGINE
 def init_db():
