@@ -33,20 +33,11 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_ai_response(user_input):
     try:
-        current_date = datetime.now().strftime("%B %d, 2026")
         
         # 1. FIXED: Identifier with models/ prefix to stop 404
         model = genai.GenerativeModel(
             model_name='models/gemini-2.5-flash',
             tools=[{"google_search_retrieval": {}}]
-        )
-
-        # 2. STRICT INSTRUCTION: Tell AI to ONLY use the Search Tool.
-        # Screenshot (15)-la vandha 2024 data-vah idhu dhaan block pannum.
-        prompt = (
-            f"Current Date is {current_date}. "
-            f"MANDATORY: Use the Google Search tool to find the LATEST info for 2026. "
-            f"IGNORE your internal training data from 2024. Question: {user_input}"
         )
 
         # 3. Generate content with the search tool active
@@ -143,15 +134,6 @@ def chat():
                     model_name='models/gemini-1.5-flash-latest',
                     tools=[{"google_search_retrieval": {}}]
                 )
-                
-                # Mandatory prompt to bypass 2024 training data
-                prompt = (
-                    f"Today's Date is {curr_date}. "
-                    f"MANDATORY: Use Google Search tool for current info. "
-                    f"If the query is about GAC Karur, find 2026 updates. "
-                    f"If general, answer using Google. Question: {user_msg}"
-                )
-                
                 response = search_model.generate_content(prompt)
                 if response.text:
                     reply = response.text.strip()
@@ -237,6 +219,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
