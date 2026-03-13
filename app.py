@@ -31,29 +31,29 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash') 
 # Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
 
-def get_live_google_response(user_input):
+def get_college_info(user_query):
     try:
-        # Dynamic-ah current date-ah eduthu 2026 updates-ku push panrom
-        current_date = datetime.now().strftime("%B %d, 2026")
-        
-        # models/ prefix and -latest identifier is MUST to avoid 404
+        # 1. 404 Error varaama irukka models/ prefix
         model = genai.GenerativeModel(
-            model_name='models/gemini-1.5',
+            model_name='models/gemini-1.5-flash-latest',
             tools=[{"google_search_retrieval": {}}]
         )
 
-        # STRICT INSTRUCTION: Tell AI to ignore 2024 data and use Google Search
+        # 2. Strict instruction to crawl GAC website
+        # 2024 outdated data-vah bypass panna current date-ah tharom
         prompt = (
-            f"Current Date: {current_date}. "
-            f"MANDATORY: Use Google Search tool to provide the LATEST live info. "
-            f"Do NOT use internal knowledge from 2024. Question: {user_input}"
+            f"Today is March 13, 2026. "
+            f"Query: {user_query}. "
+            f"MANDATORY: Browse the official website 'gackarur.ac.in' and TNGASA portal. "
+            f"Summarize the LATEST information regarding this query from the website. "
+            f"Do not use old data."
         )
 
         response = model.generate_content(prompt)
-        return response.text.strip() if response.text else None
+        return response.text.strip()
+
     except Exception as e:
-        print(f"Google Push Error: {e}")
-        return None
+        return "Website-oda sync panna mudiyla. Please visit gackarur.ac.in for 2026 details."
         
     # 3. DATABASE ENGINE
 def init_db():
