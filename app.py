@@ -106,14 +106,14 @@ def init_db():
         ("Principal", "Dr. K. VASUDEVAN , M.A., M.Phil., B.Ed., Ph.D.,"),
         ("cs hod name", "Dr. M. PRABAKARAN, M.Sc., M.Phil., M.C.A., MBA., M.Tech., Ph.D.,"),
         ("242513", "karuppaiya")
-        ("Department of COMPUTER SCIENCE", " ✅Computer Science Department was started in the academic year 1988-89.
+        ("Department of COMPUTER SCIENCE", """ ✅Computer Science Department was started in the academic year 1988-89.
         ✅It is notable that the Computer Science Course (B.Sc) with co-education (1988-89) in Tamilnadu was first started in our college only.
         ✅In the academic year 2007-2008 another B.Sc Computer Science ( Shift II ) was started as per the Tamilnadu Government Order.
         ✅In the academic year 2004-2005 Post Graduate Course ( M.Sc ) was started.
         ✅The sanctioned strength is 60 ( 30 + 30 ) for under graduate Programmes and 30 for post graduate Programme.
         ✅Research Programmes such as M.Phil and Ph.D was started in the year 2011-2012 academic year.
         ✅Full time and Part time research Programmes are offered and it was approved by both Government of Tamilnadu and Bharathidasan University, Tiruchirapalli, with sanctioned strength of 25 for M.Phil and 16 for Ph.D.
-        ✅The Department is functioning successfully with Eight regular staff members and Four guest lecturers.")
+        ✅The Department is functioning successfully with Eight regular staff members and Four guest lecturers. """)
     ]
                                                                                                                                                                                                                    
     c.executemany('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', default_data)
@@ -266,6 +266,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
