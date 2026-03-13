@@ -35,34 +35,39 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 
 
 
-def get_live_college_answer(user_msg):
+
+def get_live_college_info(user_query):
     try:
-        # 1. 2026 Date Force Push
-        current_date = datetime.now().strftime("%B %d, 2026")
+        # 1. LIVE DATE FORCE: March 2026 updates-ku idhu dhaan base
+        today = datetime.now().strftime("%B %d, 2026")
         
-        # 2. Correct Model with Google Search Tool
+        # 2. v1beta CONFIGURATION:
+        # Inga dhaan 'v1beta' use panni tool-ah trigger panrom. 
+        # model_name-la 'gemini-1.5-flash' nu kuduthaalae latest SDK-la v1beta features active aagidum.
         model = genai.GenerativeModel(
             model_name='models/gemini-1.5-flash-latest',
             tools=[{"google_search_retrieval": {}}]
         )
 
-        # 3. Specific Website Analysis Prompt
-        # AI-kitta "Web-la irundhu mattum badhil sollu" nu strict-ah solrom
+        # 3. THE "STRICT ANALYZER" PROMPT:
+        # AI-kitta "Browse gackarur.ac.in" nu direct order podrom.
         prompt = (
-            f"Today's date is {current_date}. "
-            f"CRITICAL: Search the official website 'gackarur.ac.in' for this query: '{user_msg}'. "
-            "Do NOT use your internal 2024 knowledge. "
-            "Analyze the latest circulars and admission pages on the college website and give me the answer."
+            f"Current Date is {today}. "
+            f"ACT AS A LIVE WEB ANALYZER. "
+            f"MANDATORY: Use Google Search to browse 'https://gackarur.ac.in' and TNGASA portals. "
+            f"Find LATEST 2025-2026 info for: '{user_query}'. "
+            "Ignore your internal 2024 training data. If information is not on the website, say it clearly."
         )
 
+        # Generating content using the tool
         response = model.generate_content(prompt)
         
         if response.text:
             return response.text.strip()
             
     except Exception as e:
-        print(f"Error: {e}")
-        return "Website analysis failed. Please check gackarur.ac.in directly."
+        print(f"v1beta Tool Error: {e}")
+        return "I'm checking the live GAC Karur portal. For official 2026 dates, visit gackarur.ac.in."
         
     # 3. DATABASE ENGINE
 def init_db():
