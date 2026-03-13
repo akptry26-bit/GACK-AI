@@ -6,7 +6,29 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 from thefuzz import process, fuzz
 from datetime import datetime
+import json
 
+# JSON data-vah load panna oru function
+def load_college_data():
+    with open('data.json', 'r') as f:
+        return json.load(f)
+
+# Data-vah oru variable-la vechukonga
+college_info = load_college_data()
+
+def update_json(new_question, new_answer):
+    # 1. Read existing data
+    data = load_college_data()
+    
+    # 2. Add new data (Unga structure-ku thaguntha maari)
+    if 'custom_qa' not in data:
+        data['custom_qa'] = []
+    data['custom_qa'].append({"q": new_question, "a": new_answer})
+    
+    # 3. Write back to file
+    with open('data.json', 'w') as f:
+        json.dump(data, f, indent=4)
+        
 # 1. INITIALIZATION & SECURITY
 load_dotenv()
 app = Flask(__name__)
@@ -84,7 +106,7 @@ def init_db():
         ("Principal", "Dr. K. VASUDEVAN , M.A., M.Phil., B.Ed., Ph.D.,"),
         ("cs hod name", "Dr. M. PRABAKARAN, M.Sc., M.Phil., M.C.A., MBA., M.Tech., Ph.D.,"),
         ("242513", "karuppaiya"),
-        ("contact": "email: gackarur@gmail.com,
+        ("contact","email: gackarur@gmail.com,
          website: www.gackarur.ac.in")
     ]
     c.executemany('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', default_data)
@@ -237,6 +259,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
