@@ -8,49 +8,6 @@ from thefuzz import process, fuzz
 from datetime import datetime
 import psycopg2
 from psycopg2.extras import DictCursor
-
-# Unga corrected URI (Percent-encoded password)
-DB_URI = "postgresql://postgres:AKP2004%40github@db.vcigvxhzrslcllaouauv.supabase.co:5432/postgres"
-
-def get_db_connection():
-    # Connect to Supabase
-    conn = psycopg2.connect(DB_URI)
-    return conn
-
-# App start aagumpodhu Table create panna:
-def init_db():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS college_qa (
-            id SERIAL PRIMARY KEY,
-            question TEXT NOT NULL,
-            answer TEXT NOT NULL
-        )
-    """)
-    conn.commit()
-    cur.close()
-    conn.close()
-
-# New Q&A save panna:
-def save_new_qa(q, a):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("INSERT INTO college_qa (question, answer) VALUES (%s, %s)", (q, a))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-# Bot answer panrappo check panna:
-def get_answer_from_db(user_query):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    # ILIKE use panna case-insensitive-ah search pannum
-    cur.execute("SELECT answer FROM college_qa WHERE question ILIKE %s", (f"%{user_query}%",))
-    res = cur.fetchone()
-    cur.close()
-    conn.close()
-    return res[0] if res else None
 # 1. INITIALIZATION & SECURITY
 load_dotenv()
 app = Flask(__name__)
@@ -241,88 +198,23 @@ def admin_portal():
     conn.close()
     return render_template('admin.html', knowledge=knowledge, logs=logs)
 
-@app.route('/update', methods=['POST'])
-def update_data():
-    question = request.form.get('question')
-    answer = request.form.get('answer')
-
-    if question and answer:
-        # --- LOGIC STARTS HERE ---
-        
-        # 1. Save to SQLite (Local)
-        try:
-            conn_sq = sqlite3.connect('college_bot.db')
-            cur_sq = conn_sq.cursor()
-            cur_sq.execute("INSERT INTO data (question, answer) VALUES (?, ?)", (question, answer))
-            conn_sq.commit()
-            conn_sq.close()
-        except Exception as e:
-            print(f"SQLite Error: {e}")
-
-        # 2. Save to Supabase (Cloud)
-        try:
-            conn_sb = psycopg2.connect(SUPABASE_URI)
-            cur_sb = conn_sb.cursor()
-            cur_sb.execute("INSERT INTO college_qa (question, answer) VALUES (%s, %s)", (question, answer))
-            conn_sb.commit()
-            cur_sb.close()
-            conn_sb.close()
-        except Exception as e:
-            print(f"Supabase Error: {e}")
-
-        # --- LOGIC ENDS HERE ---
-
-    return "Data updated in both Databases!"
-
 @app.route('/add_knowledge', methods=['POST'])
 def add_knowledge():
-    if not session.get('logged_in'): 
-        return redirect(url_for('login'))
+    if not session.get('logged_in'): return redirect(url_for('login'))
     
     eid = request.form.get('id')
     q = request.form.get('question', '').strip().lower()
     a = request.form.get('answer', '').strip()
     
-    if q and a:
-        # --- 1. SQLite Logic ---
-        try:
-            conn = sqlite3.connect('college_bot.db')
-            if eid: # Edit Mode
-                conn.execute('UPDATE knowledge SET question = ?, answer = ? WHERE id = ?', (q, a, eid))
-            else: # New Add Mode
-                conn.execute('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', (q, a))
-            conn.commit()
-            conn.close()
-            print("Successfully saved to SQLite")
-        except Exception as e:
-            print(f"SQLite Admin Error: {e}")
-
-        # --- 2. Supabase Logic (Cloud Backup) ---
-        try:
-            # Inga DB_URI use panrom (Mela neenga define panna name)
-            conn_sb = psycopg2.connect(DB_URI)
-            cur_sb = conn_sb.cursor()
-            
-            # Idhu table-ah confirm pannum
-            cur_sb.execute("""
-                CREATE TABLE IF NOT EXISTS college_qa (
-                    id SERIAL PRIMARY KEY,
-                    question TEXT NOT NULL,
-                    answer TEXT NOT NULL
-                )
-            """)
-            
-            # Data-vah ulla anuppuvom
-            cur_sb.execute("INSERT INTO college_qa (question, answer) VALUES (%s, %s)", (q, a))
-            
-            conn_sb.commit()
-            cur_sb.close()
-            conn_sb.close()
-            print("Successfully saved to Supabase Cloud!")
-        except Exception as e:
-            print(f"Supabase Admin Error: {e}")
-
+    conn = sqlite3.connect('college_bot.db')
+    if eid: # Edit Mode
+        conn.execute('UPDATE knowledge SET question = ?, answer = ? WHERE id = ?', (q, a, eid))
+    else: # New Add Mode
+        conn.execute('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', (q, a))
+    conn.commit()
+    conn.close()
     return redirect(url_for('admin_portal'))
+
 
 @app.route('/delete/<int:id>')
 def delete_entry(id):
@@ -344,6 +236,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
