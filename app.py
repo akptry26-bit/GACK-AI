@@ -105,8 +105,8 @@ def init_db():
         ("who created you", "I was developed by the GAC AI Research Team (Karuppaiya A)."),
         ("Principal", "Dr. K. VASUDEVAN , M.A., M.Phil., B.Ed., Ph.D.,"),
         ("cs hod name", "Dr. M. PRABAKARAN, M.Sc., M.Phil., M.C.A., MBA., M.Tech., Ph.D.,"),
-        ("242513", "karuppaiya")
-        ("Department of COMPUTER SCIENCE", """ ✅Computer Science Department was started in the academic year 1988-89.
+        ("242513", "karuppaiya"),
+        ("Department of COMPUTER SCIENCE", """ ✅Computer Science Department was started in the academic year 1988-89,
         ✅It is notable that the Computer Science Course (B.Sc) with co-education (1988-89) in Tamilnadu was first started in our college only.
         ✅In the academic year 2007-2008 another B.Sc Computer Science ( Shift II ) was started as per the Tamilnadu Government Order.
         ✅In the academic year 2004-2005 Post Graduate Course ( M.Sc ) was started.
@@ -266,6 +266,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
