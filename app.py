@@ -52,6 +52,7 @@ def get_live_college_info(user_query):
         # 3. THE "STRICT ANALYZER" PROMPT:
         # AI-kitta "Browse gackarur.ac.in" nu direct order podrom.
         prompt = (
+"Specifically find the NAMES and DESIGNATIONS of the teaching staff/faculty. "
             f"Current Date is {today}. "
             f"ACT AS A LIVE WEB ANALYZER. "
             f"MANDATORY: Use Google Search to browse 'https://gackarur.ac.in' and TNGASA portals. "
