@@ -42,8 +42,6 @@ def get_live_college_info(user_query):
         today = datetime.now().strftime("%B %d, 2026")
         
         # 2. v1beta CONFIGURATION:
-        # Inga dhaan 'v1beta' use panni tool-ah trigger panrom. 
-        # model_name-la 'gemini-1.5-flash' nu kuduthaalae latest SDK-la v1beta features active aagidum.
         model = genai.GenerativeModel(
             model_name='models/gemini-2.5-flash',
             tools=[{"google_search_retrieval": {}}]
@@ -83,7 +81,7 @@ def init_db():
         ("who are you", "I am GAC CORE AI, the official campus assistant of GAC Karur."),
         ("hello", "Hello! How can I help you with GAC Karur information today?"),
         ("who created you", "I was developed by the GAC AI Research Team (Karuppaiya A)."),
-        ("college name", "Government Arts College (Autonomous), Karur.")
+        ("")
     ]
     c.executemany('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', default_data)
     conn.commit()
@@ -235,6 +233,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
