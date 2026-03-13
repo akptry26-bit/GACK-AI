@@ -6,7 +6,51 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 from thefuzz import process, fuzz
 from datetime import datetime
+import psycopg2
+from psycopg2.extras import DictCursor
 
+# Unga corrected URI (Percent-encoded password)
+DB_URI = "postgresql://postgres:AKP2004%40github@db.vcigvxhzrslcllaouauv.supabase.co:5432/postgres"
+
+def get_db_connection():
+    # Connect to Supabase
+    conn = psycopg2.connect(DB_URI)
+    return conn
+
+# App start aagumpodhu Table create panna:
+def init_db():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS college_qa (
+            id SERIAL PRIMARY KEY,
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# New Q&A save panna:
+def save_new_qa(q, a):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("INSERT INTO college_qa (question, answer) VALUES (%s, %s)", (q, a))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# Bot answer panrappo check panna:
+def get_answer_from_db(user_query):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    # ILIKE use panna case-insensitive-ah search pannum
+    cur.execute("SELECT answer FROM college_qa WHERE question ILIKE %s", (f"%{user_query}%",))
+    res = cur.fetchone()
+    cur.close()
+    conn.close()
+    return res[0] if res else None
 # 1. INITIALIZATION & SECURITY
 load_dotenv()
 app = Flask(__name__)
@@ -234,6 +278,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
