@@ -6,8 +6,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 from thefuzz import process, fuzz
 from datetime import datetime
-import psycopg2
-from psycopg2.extras import DictCursor
+
 # 1. INITIALIZATION & SECURITY
 load_dotenv()
 app = Flask(__name__)
@@ -236,6 +235,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
