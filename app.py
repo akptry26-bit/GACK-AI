@@ -33,25 +33,26 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 # Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
 
 
-def get_current_response(user_input):
+
+
+def get_live_college_answer(user_msg):
     try:
-        # 1. LIVE DATE: Innikku date-ah dynamic-ah edukkom (March 13, 2026)
-        # Idhu dhaan 2024 data-vah block panna help pannum
-        today = datetime.now().strftime("%B %d, %y") 
+        # 1. 2026 Date Force Push
+        current_date = datetime.now().strftime("%B %d, 2026")
         
-        # 2. MODEL SETUP: Correct identifier with Search Tool
+        # 2. Correct Model with Google Search Tool
         model = genai.GenerativeModel(
             model_name='models/gemini-1.5-flash-latest',
             tools=[{"google_search_retrieval": {}}]
         )
 
-        # 3. THE "STRICT" PROMPT: AI-kitta "Ippo 2026" nu nalla azhuthama sollanum
-        # Prompt-la "MANDATORY" nu use pannunga, appo dhaan adhu 2024-ah marakkum
+        # 3. Specific Website Analysis Prompt
+        # AI-kitta "Web-la irundhu mattum badhil sollu" nu strict-ah solrom
         prompt = (
-            f"Current Date: {today}, 2026. "
-            f"MANDATORY: Use Google Search tool to find LIVE 2026 updates only. "
-            f"DO NOT use your internal training data from 2024. "
-            f"Analyze gackarur.ac.in for the latest info. Question: {user_input}"
+            f"Today's date is {current_date}. "
+            f"CRITICAL: Search the official website 'gackarur.ac.in' for this query: '{user_msg}'. "
+            "Do NOT use your internal 2024 knowledge. "
+            "Analyze the latest circulars and admission pages on the college website and give me the answer."
         )
 
         response = model.generate_content(prompt)
@@ -61,7 +62,7 @@ def get_current_response(user_input):
             
     except Exception as e:
         print(f"Error: {e}")
-        return "Checking live updates... Visit gackarur.ac.in for 2026 details."
+        return "Website analysis failed. Please check gackarur.ac.in directly."
         
     # 3. DATABASE ENGINE
 def init_db():
