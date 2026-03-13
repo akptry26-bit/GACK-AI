@@ -52,13 +52,13 @@ def get_live_college_info(user_query):
         # 3. THE "STRICT ANALYZER" PROMPT:
         # AI-kitta "Browse gackarur.ac.in" nu direct order podrom.
         prompt = (
-"Specifically find the NAMES and DESIGNATIONS of the teaching staff/faculty. "
-            f"Current Date is {today}. "
-            f"ACT AS A LIVE WEB ANALYZER. "
-            f"MANDATORY: Use Google Search to browse 'https://gackarur.ac.in' and TNGASA portals. "
-            f"Find LATEST 2025-2026 info for: '{user_query}'. "
-            "Ignore your internal 2024 training data. If information is not on the website, say it clearly."
-        )
+    "Today's Date: March 13, 2026. "
+    "MANDATORY: Use Google Search to find the 'Faculty' or 'Staff List' page under 'Computer Science' on gackarur.ac.in. "
+    "Do NOT give me history or infrastructure details. "
+    "I need the NAMES and DESIGNATIONS of the professors. "
+    "If the names are in a table, extract and list them. "
+    f"Query: {user_query}"
+)
 
         # Generating content using the tool
         response = model.generate_content(prompt)
