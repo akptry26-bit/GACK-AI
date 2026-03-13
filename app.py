@@ -276,19 +276,52 @@ def update_data():
 
 @app.route('/add_knowledge', methods=['POST'])
 def add_knowledge():
-    if not session.get('logged_in'): return redirect(url_for('login'))
+    if not session.get('logged_in'): 
+        return redirect(url_for('login'))
     
     eid = request.form.get('id')
     q = request.form.get('question', '').strip().lower()
     a = request.form.get('answer', '').strip()
     
-    conn = sqlite3.connect('college_bot.db')
-    if eid: # Edit Mode
-        conn.execute('UPDATE knowledge SET question = ?, answer = ? WHERE id = ?', (q, a, eid))
-    else: # New Add Mode
-        conn.execute('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', (q, a))
-    conn.commit()
-    conn.close()
+    if q and a:
+        # --- 1. SQLite Logic ---
+        try:
+            conn = sqlite3.connect('college_bot.db')
+            if eid: # Edit Mode
+                conn.execute('UPDATE knowledge SET question = ?, answer = ? WHERE id = ?', (q, a, eid))
+            else: # New Add Mode
+                conn.execute('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', (q, a))
+            conn.commit()
+            conn.close()
+            print("Successfully saved to SQLite")
+        except Exception as e:
+            print(f"SQLite Admin Error: {e}")
+
+        # --- 2. Supabase Logic (Cloud Backup) ---
+        try:
+            # Inga DB_URI use panrom (Mela neenga define panna name)
+            conn_sb = psycopg2.connect(DB_URI)
+            cur_sb = conn_sb.cursor()
+            
+            # Idhu table-ah confirm pannum
+            cur_sb.execute("""
+                CREATE TABLE IF NOT EXISTS college_qa (
+                    id SERIAL PRIMARY KEY,
+                    question TEXT NOT NULL,
+                    answer TEXT NOT NULL
+                )
+            """)
+            
+            # Data-vah ulla anuppuvom
+            cur_sb.execute("INSERT INTO college_qa (question, answer) VALUES (%s, %s)", (q, a))
+            
+            conn_sb.commit()
+            cur_sb.close()
+            conn_sb.close()
+            print("Successfully saved to Supabase Cloud!")
+        except Exception as e:
+            print(f"Supabase Admin Error: {e}")
+
     return redirect(url_for('admin_portal'))
 
 @app.route('/delete/<int:id>')
@@ -311,6 +344,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
