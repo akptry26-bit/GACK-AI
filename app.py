@@ -84,9 +84,8 @@ def init_db():
         ("Principal", "Dr. K. VASUDEVAN , M.A., M.Phil., B.Ed., Ph.D.,"),
         ("cs hod name", "Dr. M. PRABAKARAN, M.Sc., M.Phil., M.C.A., MBA., M.Tech., Ph.D.,"),
         ("242513", "karuppaiya"),
-        ("contact": 
-        "email": "gackarur@gmail.com",
-        "website": "www.gackarur.ac.in")
+        ("contact": "email: gackarur@gmail.com,
+         website: www.gackarur.ac.in")
     ]
     c.executemany('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', default_data)
     conn.commit()
@@ -238,6 +237,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
