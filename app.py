@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 import google.generativeai as genai
 from dotenv import load_dotenv
 from thefuzz import process, fuzz
+from datetime import datetime
 
 # 1. INITIALIZATION & SECURITY
 load_dotenv()
@@ -31,29 +32,36 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash') 
 # Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
 
-def get_college_info(user_query):
+
+def get_current_response(user_input):
     try:
-        # 1. 404 Error varaama irukka models/ prefix
+        # 1. LIVE DATE: Innikku date-ah dynamic-ah edukkom (March 13, 2026)
+        # Idhu dhaan 2024 data-vah block panna help pannum
+        today = datetime.now().strftime("%B %d, %y") 
+        
+        # 2. MODEL SETUP: Correct identifier with Search Tool
         model = genai.GenerativeModel(
             model_name='models/gemini-1.5-flash-latest',
             tools=[{"google_search_retrieval": {}}]
         )
 
-        # 2. Strict instruction to crawl GAC website
-        # 2024 outdated data-vah bypass panna current date-ah tharom
+        # 3. THE "STRICT" PROMPT: AI-kitta "Ippo 2026" nu nalla azhuthama sollanum
+        # Prompt-la "MANDATORY" nu use pannunga, appo dhaan adhu 2024-ah marakkum
         prompt = (
-            f"Today is March 13, 2026. "
-            f"Query: {user_query}. "
-            f"MANDATORY: Browse the official website 'gackarur.ac.in' and TNGASA portal. "
-            f"Summarize the LATEST information regarding this query from the website. "
-            f"Do not use old data."
+            f"Current Date: {today}, 2026. "
+            f"MANDATORY: Use Google Search tool to find LIVE 2026 updates only. "
+            f"DO NOT use your internal training data from 2024. "
+            f"Analyze gackarur.ac.in for the latest info. Question: {user_input}"
         )
 
         response = model.generate_content(prompt)
-        return response.text.strip()
-
+        
+        if response.text:
+            return response.text.strip()
+            
     except Exception as e:
-        return "Website-oda sync panna mudiyla. Please visit gackarur.ac.in for 2026 details."
+        print(f"Error: {e}")
+        return "Checking live updates... Visit gackarur.ac.in for 2026 details."
         
     # 3. DATABASE ENGINE
 def init_db():
