@@ -45,7 +45,7 @@ def get_live_college_info(user_query):
         # Inga dhaan 'v1beta' use panni tool-ah trigger panrom. 
         # model_name-la 'gemini-1.5-flash' nu kuduthaalae latest SDK-la v1beta features active aagidum.
         model = genai.GenerativeModel(
-            model_name='models/gemini-1.5-flash-latest',
+            model_name='models/gemini-2.5-flash',
             tools=[{"google_search_retrieval": {}}]
         )
 
