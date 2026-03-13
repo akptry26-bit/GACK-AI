@@ -288,6 +288,21 @@ td:nth-child(2)::first-letter {
         window.onclick = function(e) {
             if (e.target == document.getElementById('editModal')) closeEdit();
         }
+
+        async function updateBot() {
+    const q = document.getElementById('question').value;
+    const a = document.getElementById('answer').value;
+
+    const response = await fetch('/update-qa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, answer: a })
+    });
+
+    const result = await response.json();
+    alert(result.message);
+}
     </script>
 </body>
 </html>
+
