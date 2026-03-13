@@ -52,11 +52,12 @@ def get_live_college_info(user_query):
         # 3. THE "STRICT ANALYZER" PROMPT:
         # AI-kitta "Browse gackarur.ac.in" nu direct order podrom.
         prompt = (
-    "Today's Date: March 13, 2026. "
-    "MANDATORY: Use Google Search to find the 'Faculty' or 'Staff List' page under 'Computer Science' on gackarur.ac.in. "
-    "Do NOT give me history or infrastructure details. "
-    "I need the NAMES and DESIGNATIONS of the professors. "
-    "If the names are in a table, extract and list them. "
+    "Current Date: March 13, 2026. "
+    "MANDATORY: You are an assistant for GAC Karur. "
+    "MANDATORY: Use Google Search to browse ONLY 'gackarur.ac.in'. "
+    "CRITICAL: Do NOT invent names. If you cannot find the actual staff names on the website, "
+    "simply say: 'Official staff list is currently not reachable on the website portal.' "
+    "Do NOT give generic English names like Eleanor or Michael. Only give names found on gackarur.ac.in."
     f"Query: {user_query}"
 )
 
