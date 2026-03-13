@@ -241,6 +241,39 @@ def admin_portal():
     conn.close()
     return render_template('admin.html', knowledge=knowledge, logs=logs)
 
+@app.route('/update', methods=['POST'])
+def update_data():
+    question = request.form.get('question')
+    answer = request.form.get('answer')
+
+    if question and answer:
+        # --- LOGIC STARTS HERE ---
+        
+        # 1. Save to SQLite (Local)
+        try:
+            conn_sq = sqlite3.connect('college_bot.db')
+            cur_sq = conn_sq.cursor()
+            cur_sq.execute("INSERT INTO data (question, answer) VALUES (?, ?)", (question, answer))
+            conn_sq.commit()
+            conn_sq.close()
+        except Exception as e:
+            print(f"SQLite Error: {e}")
+
+        # 2. Save to Supabase (Cloud)
+        try:
+            conn_sb = psycopg2.connect(SUPABASE_URI)
+            cur_sb = conn_sb.cursor()
+            cur_sb.execute("INSERT INTO college_qa (question, answer) VALUES (%s, %s)", (question, answer))
+            conn_sb.commit()
+            cur_sb.close()
+            conn_sb.close()
+        except Exception as e:
+            print(f"Supabase Error: {e}")
+
+        # --- LOGIC ENDS HERE ---
+
+    return "Data updated in both Databases!"
+
 @app.route('/add_knowledge', methods=['POST'])
 def add_knowledge():
     if not session.get('logged_in'): return redirect(url_for('login'))
@@ -278,6 +311,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
