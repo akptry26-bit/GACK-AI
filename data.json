@@ -1,1 +1,26 @@
-[]
+{
+  "administration": {
+    "principal": "Principal Dr. K. VASUDEVAN , M.A., M.Phil., B.Ed., Ph.D.," ,
+    "institution": "Government Arts College (Autonomous), Karur",
+    "established": "1966",
+    "naac_grade": "B++ Grade (3rd Cycle)",
+    "location": "Thanthonimalai, Karur - 639005",
+    "contact": {
+        "email": "gackarur@gmail.com",
+        "website": "www.gackarur.ac.in"
+    }
+  },
+  "facilities": {
+    "library": {
+      "books": "50,000+",
+      "digital": "INFLIBNET and N-LIST access",
+      "type": "Digitalized Reference Library"
+    },
+    "hostel": "Safe Women's Hostel inside campus",
+    "shifts": {
+      "shift_1": "08:45 AM - 01:40 PM",
+      "shift_2": "01:45 PM - 06:15 PM"
+    },
+    "scholarships": ["Post-Metric", "BC/MBC", "SC/ST Free Education", "Farmer Scholarship"]
+  }
+}
