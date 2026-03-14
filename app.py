@@ -76,6 +76,7 @@ def init_db():
         ("hello", "Hello! How can I help you with GAC Karur information today?"),
         ("who created you", "I was developed by the GAC AI Research Team (Karuppaiya A)."),
         ("college name", "Government Arts College (Autonomous), Karur."),
+        ("About the College","The Government Arts College, Thanthonimalai, Karur enjoys the fame of being the only institution in the whole district to show the longest academic history and public service. Established in 1966, it has worked its way ahead of other colleges in the matter of offering higher education of remarkable quality and largely to middle and lower income groups. The repute of this town as a textile industrial centre is further enhanced by the performance record of the Government Arts College Karur as it has never once in the recent years lacked a gold medalist. This college is affiliated to Bharathidasan University, Tiruchirappalli."),
          ("history", " Established in 1966 in Thanthonimalai, Government Arts College (Autonomous), Karur (GAC Karur) is a premier public institution in Tamil Nadu, initially affiliated with Madras University and later Bharathidasan University. It became co-educational in 1972 and currently holds an 'A' grade accreditation from NAAC. ")
 
     ]
