@@ -75,7 +75,9 @@ def init_db():
         ("who are you", "I am GAC CORE AI, the official campus assistant of GAC Karur."),
         ("hello", "Hello! How can I help you with GAC Karur information today?"),
         ("who created you", "I was developed by the GAC AI Research Team (Karuppaiya A)."),
-        ("college name", "Government Arts College (Autonomous), Karur.")
+        ("college name", "Government Arts College (Autonomous), Karur."),
+         ("history", " Established in 1966 in Thanthonimalai, Government Arts College (Autonomous), Karur (GAC Karur) is a premier public institution in Tamil Nadu, initially affiliated with Madras University and later Bharathidasan University. It became co-educational in 1972 and currently holds an 'A' grade accreditation from NAAC. ")
+
     ]
     c.executemany('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', default_data)
     conn.commit()
