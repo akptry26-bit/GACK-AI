@@ -184,28 +184,6 @@ def get_college_stats(user_msg):
 
 
 
-@app.route('/chat', methods=['POST'])
-def main_chat(): # Vera name-la handle pannunga
-    user_msg = request.json.get('message', '').lower()
-    
-    # 1. First: Check for Specific Strength (The new function)
-    strength_reply = get_college_stats(user_msg)
-    if strength_reply:
-        return jsonify({"reply": strength_reply})
-
-    # 2. Second: Check Default Data (Tuples list)
-    reply = ""
-    for question, answer in default_data:
-        if question in user_msg:
-            reply = answer
-            break
-            
-    if reply:
-        return jsonify({"reply": reply})
-
-    # 3. Third: Gemini Fallback
-    # reply = model.generate_content(user_msg).text
-    return jsonify({"reply": "I'm checking the official records for that."})
 
 @app.route('/chat', methods=['POST'])
 def chat():
