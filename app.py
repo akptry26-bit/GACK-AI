@@ -157,16 +157,22 @@ def chat():
             if question.lower() in user_msg:
                 return jsonify({"status": "success", "reply": answer})
 
-        # 4. GEMINI AI (Fallback - Idhu dhaan ippo work aagum!)
-        if model:
+        # --- PHASE 2: Gemini AI with Google Search (Updated) ---
+        if not reply and model:
             try:
-                # Gemini kitta 'GAC Karur AI' maari badhil solla solroam
-                prompt = f"You are GAC Karur Assistant. Answer this: {user_msg}"
-                response = model.generate_content(prompt)
-                if response.text:
-                    return jsonify({"status": "success", "reply": response.text})
-            except Exception as ai_err:
-                print(f"Gemini Error: {ai_err}")
+                # Tools-la 'google_search_retrieval' add panna dhaan search aagum
+                # Model configure pannum bodhu idhu irukanum
+                response = model.generate_content(
+                    f"You are the GAC Karur Assistant. User asked: {user_msg}",
+                    tools=[{'google_search_retrieval': {}}] # <--- Google Search Power!
+                )
+                
+                if response and response.text:
+                    reply = response.text
+            except Exception as e:
+                # Oru vela search fail aana, normal Gemini-ah call pannum
+                response = model.generate_content(f"Answer briefly: {user_msg}")
+                reply = response.text if response else None
 
         # 5. Final Fallback
         return jsonify({"status": "success", "reply": "I am trained for GAC Karur info. Can you be more specific?"})
