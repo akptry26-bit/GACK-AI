@@ -28,7 +28,7 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 
 
 # Step 2: Use the most basic model
-model = genai.GenerativeModel('gemini-2.5-flash') 
+model = genai.GenerativeModel('gemini-1.5-flash') 
 # Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
 
 def get_live_google_response(user_input):
@@ -87,6 +87,7 @@ def ask():
         return jsonify({'reply': 'LINK ERROR: Server connection failed.'})
 
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
+# --- CHAT ROUTE-KULLA INDHA LOGIC-AH UPDATE PANNUNGA ---
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
@@ -94,46 +95,40 @@ def chat():
         user_msg = data.get('message', '').strip().lower()
         reply = None
 
-        # --- Phase 0: Greetings ---
-        greetings = {"hi": "Hello! GAC CORE AI online.", "hello": "Hi! How can I help you?"}
+        # 1. GREETINGS (Phase 0)
+        greetings = {"hi": "Hello!", "hello": "Hi! GAC AI online.", "thanks": "Welcome!"}
         if user_msg in greetings:
-            reply = greetings[user_msg]
+            return jsonify({"status": "success", "reply": greetings[user_msg]})
 
-        # --- Phase 1: Local DB Search ---
+        # 2. LOCAL DB SEARCH (Phase 1)
+        # (Unga existing SQLite code inga irukkum...)
+        # ... logic to find 'reply' from DB ...
+
+        # 3. GEMINI AI + GOOGLE SEARCH (Phase 2 - IDHU DHAAN IPO FIX PANROM)
+        if not reply and model:
+            try:
+                # System instructions + Current Date for better accuracy
+                current_date = datetime.now().strftime("%B %d, 2026")
+                prompt = f"System: Current Date is {current_date}. You are GAC Karur AI. Use Google Search to answer: {user_msg}"
+                
+                response = model.generate_content(prompt)
+                
+                if response and response.text:
+                    reply = response.text.strip()
+            except Exception as ai_err:
+                print(f"AI/Google Error: {ai_err}")
+                reply = None
+
+        # 4. FINAL FALLBACK (Phase 3)
         if not reply:
-            conn = sqlite3.connect('college_bot.db')
-            conn.row_factory = sqlite3.Row
-            c = conn.cursor()
-            knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
-            knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
-            if knowledge_dict:
-                match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-                if score > 85: reply = knowledge_dict[match]
+            reply = "I'm still learning about that. Please ask about GAC Karur courses or admissions!"
 
-        # --- Phase 2: GOOGLE SEARCH PUSH (The Real Fix) ---
-        # DB-la illana automatic-ah Google-la irundhu 2026 data push aagum
-        if not reply:
-            reply = get_live_google_response(user_msg)
-
-        # --- Phase 3: Final Fallback (Professional) ---
-        if not reply:
-            reply = "I'm having trouble fetching live data. Please check gackarur.ac.in for 2026 updates."
-
-        # Logging (Fixed spacing to avoid Line 154 error)
-        conn = sqlite3.connect('college_bot.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
-                  (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
-        conn.commit()
-        conn.close()
-        
         return jsonify({"status": "success", "reply": reply})
 
     except Exception as e:
-        print(f"Critical Error: {e}")
-        return jsonify({"status": "error", "reply": "Thinking... try again!"}), 500
-
-
+        print(f"Final Error: {e}")
+        return jsonify({"status": "error", "reply": "Thinking... try again!"})
+        
 # 5. ADMIN PANEL & LOGIN LOGIC
 @app.route('/admin-login', methods=['GET', 'POST'])
 def login():
