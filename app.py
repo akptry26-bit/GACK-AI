@@ -72,7 +72,7 @@ def get_live_college_info(user_query):
         # 3. THE "STRICT ANALYZER" PROMPT:
         # AI-kitta "Browse gackarur.ac.in" nu direct order podrom.
         prompt = (
-    "Current Date: March 13, 2026. "
+    "Current Date: March 14, 2026. "
     "MANDATORY: You are an assistant for GAC Karur. "
     "MANDATORY: Use Google Search to browse ONLY 'gackarur.ac.in'. "
     "CRITICAL: Do NOT invent names. If you cannot find the actual staff names on the website, "
@@ -145,37 +145,7 @@ def ask():
         return jsonify({'reply': 'LINK ERROR: Server connection failed.'})
 
 
-def get_college_stats(user_msg):
-    # Data structure for CS Strength (Original data patti maathikonga)
-    cs_data = {
-        "ug 1st": {"total": "60", "boys": "35", "girls": "25"},
-        "ug 2nd": {"total": "58", "boys": "30", "girls": "28"},
-        "ug 3rd": {"total": "55", "boys": "32", "girls": "23"},
-        "pg 1st": {"total": "30", "boys": "12", "girls": "18"},
-        "pg 2nd": {"total": "25", "boys": "10", "girls": "15"}
-    }
 
-    msg = user_msg.lower()
-    
-    # Check if user is asking about CS strength
-    if "cs" in msg or "computer" in msg:
-        # Year identify pannuvom
-        year_key = ""
-        if "1st year" in msg or "i year" in msg: year_key = "1st"
-        elif "2nd year" in msg or "ii year" in msg: year_key = "2nd"
-        elif "3rd year" in msg or "iii year" in msg: year_key = "3rd"
-        
-        # Category (UG/PG) identify pannuvom
-        cat = "pg" if ("pg" in msg or "msc" in msg or "m.sc" in msg) else "ug"
-        final_key = f"{cat} {year_key}"
-
-        if year_key in ["1st", "2nd", "3rd"] and final_key in cs_data:
-            stats = cs_data[final_key]
-            if "boy" in msg: return f"There are {stats['boys']} boys in CS {final_key.upper()}."
-            if "girl" in msg: return f"There are {stats['girls']} girls in CS {final_key.upper()}."
-            return f"Total strength of CS {final_key.upper()} is {stats['total']} ({stats['boys']} Boys, {stats['girls']} Girls)."
-            
-    return None # Strength related illana None tharum
 
 
 
