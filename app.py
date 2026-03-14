@@ -92,71 +92,52 @@ def chat():
     try:
         data = request.get_json()
         user_msg = data.get('message', '').strip().lower()
-        
-        # --- PHASE 0: Instant Response (Greetings) ---
-        # Database-ku munnadiye idhu check pannum, so fast-ah irukkum
-        greetings_map = {
-            "hi": "Hello! Welcome to GAC CORE AI. How can I help you today?",
-        "hello": "Hi there! I am your GAC Karur digital assistant. Ask me anything!",
-        "hey": "Hey! GAC-karur AI online. What's on your mind?",
-        "gm": "Good Morning! Wishing you a wonderful and productive day at GAC Karur.",
-        "good morning": "Good Morning! Hope you have a great day ahead!",
-        "gn": "Good Night! Rest well. I'll be here if you need anything tomorrow.",
-        "good night": "Good Night! Sleep well. System entering low-power mode.",
-        
-        "thank you": "You're very welcome! Glad I could help.",
-        "thanks": "No problem! Happy to assist a GAC student."
-        }
+        reply = None
 
+        # PHASE 0: GREETINGS (Instant)
+        greetings_map = {"hi": "Hello!", "hello": "Hi! GAC AI online.", "thanks": "Welcome!"}
         if user_msg in greetings_map:
-            reply = greetings_map[user_msg]
-            # Log panniye aaganum admin-ku theriya
-            conn = sqlite3.connect('college_bot.db')
-            c = conn.cursor()
-            c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
-                      (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
-            conn.commit()
-            conn.close()
-            return jsonify({"status": "success", "reply": reply})
+            return jsonify({"status": "success", "reply": greetings_map[user_msg]})
 
-        # --- PHASE 1: Local Knowledge Base Search (Existing Code) ---
+        # PHASE 1: LOCAL DATABASE (Knowledge Base)
         conn = sqlite3.connect('college_bot.db')
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
-        
         knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
         knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
         
-        reply = None
         if knowledge_dict:
             best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-            if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
+            if score > 75:
                 reply = knowledge_dict[best_match]
 
-        # Phase 2: Gemini AI
+        # PHASE 2: GEMINI AI + GOOGLE SEARCH (Idhu dhaan mukhkiyam)
         if not reply and model:
             try:
-                response = model.generate_content(user_msg)
-                reply = response.text
-            except:
+                # System context kooda query anupuvom
+                prompt = f"You are GAC Karur Assistant. Current Date: 2026. Use Google Search to answer: {user_msg}"
+                response = model.generate_content(prompt)
+                if response and response.text:
+                    reply = response.text
+            except Exception as ai_err:
+                print(f"AI/Google Error: {ai_err}")
                 reply = None
 
-        # Phase 3: Final Fallback
+        # PHASE 3: FINAL FALLBACK
         if not reply:
-            reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
+            reply = "I'm still learning about that. Please ask about GAC Karur departments or admissions."
 
-        # Logging
+        # Logging to DB
         c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
                   (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
         conn.commit()
         conn.close()
-        
-        return jsonify({"status": "success", "reply": reply})
-        
-    except Exception as e:
-        print(f"Error: {e}") # Terminal-la enna error-nu paakka
-        return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
 
+        return jsonify({"status": "success", "reply": reply})
+
+    except Exception as e:
+        print(f"System Error: {e}")
+        return jsonify({"status": "error", "reply": "Thinking... try asking again!"})
 
 # 5. ADMIN PANEL & LOGIN LOGIC
 @app.route('/admin-login', methods=['GET', 'POST'])
