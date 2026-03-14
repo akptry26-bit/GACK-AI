@@ -141,56 +141,39 @@ def chat():
         data = request.get_json()
         user_msg = data.get('message', '').strip().lower()
         
-        # 1. Greetings (Phase 0)
-        greetings = {
-            "hi": "Hello! Welcome to GAC CORE AI.",
-            "hello": "Hi! I'm your GAC Karur assistant. How can I help?",
-            "thanks": "You're welcome! Happy to help a GAC student."
-        }
+        # 1. Greetings (Instant)
+        greetings = {"hi": "Hello!", "hello": "Hi! GAC AI online.", "thanks": "Welcome!"}
         if user_msg in greetings:
             return jsonify({"status": "success", "reply": greetings[user_msg]})
 
-        # 2. Strength Data (Phase 0.5)
-        strength_reply = get_cs_strength(user_msg)
+        # 2. Strength Data (Custom Logic)
+        strength_reply = get_cs_strength(user_msg) 
         if strength_reply:
             return jsonify({"status": "success", "reply": strength_reply})
 
-        # 3. Database Knowledge Base (Phase 1)
-        reply = None
-        try:
-            conn = sqlite3.connect('college_bot.db')
-            conn.row_factory = sqlite3.Row
-            c = conn.cursor()
-            knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
-            knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
-            conn.close()
+        # 3. Local Data Search (The Tuple List from your screenshot)
+        # Indha loop mela neenga anupuna andha 'default_data' list-ah check pannum
+        for question, answer in default_data:
+            if question.lower() in user_msg:
+                return jsonify({"status": "success", "reply": answer})
 
-            if knowledge_dict:
-                best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-                if score > 70:
-                    reply = knowledge_dict[best_match]
-        except Exception as db_e:
-            print(f"DB Error: {db_e}")
-
-        # 4. Gemini AI Fallback (Phase 2)
-        if not reply and model:
+        # 4. GEMINI AI (Fallback - Idhu dhaan ippo work aagum!)
+        if model:
             try:
-                # Giving Gemini the context that it's for GAC Karur
-                ai_prompt = f"You are the official GAC Karur Assistant. User asked: {user_msg}. Provide a helpful and concise answer."
-                response = model.generate_content(ai_prompt)
-                reply = response.text
-            except:
-                reply = None
+                # Gemini kitta 'GAC Karur AI' maari badhil solla solroam
+                prompt = f"You are GAC Karur Assistant. Answer this: {user_msg}"
+                response = model.generate_content(prompt)
+                if response.text:
+                    return jsonify({"status": "success", "reply": response.text})
+            except Exception as ai_err:
+                print(f"Gemini Error: {ai_err}")
 
-        # 5. Final Fallback (Phase 3)
-        if not reply:
-            reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
+        # 5. Final Fallback
+        return jsonify({"status": "success", "reply": "I am trained for GAC Karur info. Can you be more specific?"})
 
-        return jsonify({"status": "success", "reply": reply})
-        
     except Exception as e:
-        print(f"System Error: {e}")
-        return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
+        # Error vandha 'Offline' nu sollaama, Gemini-ku redirect panna vaikkalam
+        return jsonify({"status": "success", "reply": "Thinking... try asking again!"})
 
 
 # 5. ADMIN PANEL & LOGIN LOGIC
