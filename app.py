@@ -131,46 +131,31 @@ def chat():
     try:
         data = request.get_json()
         user_msg = data.get('message', '').strip().lower()
-        
-        # --- 1. GREETINGS & STRENGTH (Instant Logic) ---
-        greetings = {"hi": "Hello!", "hello": "Hi! GAC AI here.", "thanks": "Welcome!"}
-        if user_msg in greetings:
-            return jsonify({"status": "success", "reply": greetings[user_msg]})
-        
-        strength_reply = get_cs_strength(user_msg)
-        if strength_reply:
-            return jsonify({"status": "success", "reply": strength_reply})
+        reply = None
 
-        # --- 2. LOCAL DATA (The Tuple List) ---
-        # Database fetch pannaama direct-ah unga default_data list-ah check panroam
+        # 1. Local Database/Tuple check (First)
         for question, answer in default_data:
             if question.lower() in user_msg:
                 return jsonify({"status": "success", "reply": answer})
 
-        # --- 3. GEMINI AI + GOOGLE SEARCH (The Brain) ---
+        # 2. AI + GOOGLE SEARCH (Second)
         if model:
             try:
-                # Inga dhaan Google Search power-ah enable panroam
-                response = model.generate_content(
-                    f"You are the GAC Karur Assistant. Use Google Search to answer: {user_msg}",
-                    tools=[{'google_search_retrieval': {}}]
-                )
+                # System instruction context kudunga
+                response = model.generate_content(f"Answer this as GAC Karur Assistant: {user_msg}")
                 if response and response.text:
-                    return jsonify({"status": "success", "reply": response.text.strip()})
-            except Exception as ai_e:
-                print(f"AI Error: {ai_e}")
+                    reply = response.text.strip()
+            except Exception as e:
+                print(f"AI ERROR: {e}") # Render log-la enna error-nu kaatum
 
-        # --- 4. SAFE FALLBACK ---
-        # Edhuvume work aagala-na kooda indha message dhaan varanum, 'Link Error' varaadhu
-        return jsonify({
-            "status": "success", 
-            "reply": "I am looking into that for you. Try asking about CS department or Principal!"
-        })
+        # 3. Final Fallback (If AI fails)
+        if not reply:
+            reply = "I'm having a small technical glitch with my AI brain. Can you ask about college departments?"
+
+        return jsonify({"status": "success", "reply": reply})
 
     except Exception as e:
-        # Inga dhaan 'Link Error' msg irundhudhu, ippo adha remove pannitom
-        print(f"Server Error: {e}")
-        return jsonify({"status": "success", "reply": "Thinking... please try again!"})
+        return jsonify({"status": "error", "reply": "System Error. Try again!"})
 
 
 
