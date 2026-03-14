@@ -72,8 +72,7 @@ def init_db():
     c.executemany('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', default_data)
     conn.commit()
     conn.close()
-
-init_db()
+    init_db()
 @app.route('/ask', methods=['POST'])
 def ask():
     try:
@@ -133,38 +132,35 @@ def chat():
             if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
                 reply = knowledge_dict[best_match]
 
-        # --- PHASE 2: Gemini AI with Web Search ---
+        
+        # --- STEP 3: LOCAL DATABASE (Knowledge Base / Tuple List) ---
+        # Unga 'default_data' list-ah check pannum
+        for question, answer in default_data:
+            if question.lower() in user_msg:
+                return jsonify({"status": "success", "reply": answer})
+
+        # --- STEP 4: GEMINI AI + GOOGLE SEARCH (The Brain) ---
         if not reply and model:
             try:
-                # 1. First, try Gemini with Google Search enabled
-                # NOTE: Tool call correct-ah irukanum
-                response = model.generate_content(
-                    f"You are the GAC Karur Assistant. A student is asking: {user_msg}. Answer using current info.",
-                    tools=[{'google_search_retrieval': {}}] 
-                )
+                # System instructions mukhkiyam: Gemini-ku context puriyum
+                prompt = f"You are the GAC Karur Academic Assistant. Use Google Search if needed. User query: {user_msg}"
+                response = model.generate_content(prompt)
                 
                 if response and response.text:
-                    reply = response.text
-            except Exception as e:
-                print(f"Gemini Search Error: {e}")
-                # 2. Fallback to Basic Gemini if search fails
-                try:
-                    basic_res = model.generate_content(f"Answer briefly: {user_msg}")
-                    reply = basic_res.text
-                except:
-                    reply = None
+                    reply = response.text.strip()
+            except Exception as ai_e:
+                print(f"AI/Search Error: {ai_e}")
+                reply = None
 
-        # Logging
-        c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
-                  (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
-        conn.commit()
-        conn.close()
-        
+        # --- STEP 5: FINAL FALLBACK ---
+        if not reply or reply == "":
+            reply = "I'm checking the latest info. Please ask about CS department, Principal, or Admissions!"
+
         return jsonify({"status": "success", "reply": reply})
-        
+
     except Exception as e:
-        print(f"Error: {e}") # Terminal-la enna error-nu paakka
-        return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
+        print(f"System Fault: {e}")
+        return jsonify({"status": "error", "reply": "Neural system busy. Try asking again!"}), 500
 
 
 # 5. ADMIN PANEL & LOGIN LOGIC
