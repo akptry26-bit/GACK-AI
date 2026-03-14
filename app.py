@@ -145,68 +145,55 @@ def chat():
         data = request.get_json()
         user_msg = data.get('message', '').strip().lower()
         
-        # --- PHASE 0: Instant Response (Greetings) ---
-        # Database-ku munnadiye idhu check pannum, so fast-ah irukkum
+        # --- PHASE 0: Instant Greetings ---
         greetings_map = {
             "hi": "Hello! Welcome to GAC CORE AI. How can I help you today?",
-        "hello": "Hi there! I am your GAC Karur digital assistant. Ask me anything!",
-        "hey": "Hey! GAC-karur AI online. What's on your mind?",
-        "gm": "Good Morning! Wishing you a wonderful and productive day at GAC Karur.",
-        "good morning": "Good Morning! Hope you have a great day ahead!",
-        "gn": "Good Night! Rest well. I'll be here if you need anything tomorrow.",
-        "good night": "Good Night! Sleep well. System entering low-power mode.",
-        
-        "thank you": "You're very welcome! Glad I could help.",
-        "thanks": "No problem! Happy to assist a GAC student."
+            "hello": "Hi there! I am your GAC Karur digital assistant. Ask me anything!",
+            "gm": "Good Morning! Hope you have a great day at GAC Karur.",
+            "thanks": "No problem! Happy to assist a GAC student."
         }
-
         if user_msg in greetings_map:
-            reply = greetings_map[user_msg]
-            # Log panniye aaganum admin-ku theriya
-            conn = sqlite3.connect('college_bot.db')
-            c = conn.cursor()
-            c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
-                      (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
-            conn.commit()
-            conn.close()
-            return jsonify({"status": "success", "reply": reply})
+            return jsonify({"status": "success", "reply": greetings_map[user_msg]})
 
-        # --- PHASE 1: Local Knowledge Base Search (Existing Code) ---
-        conn = sqlite3.connect('college_bot.db')
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        
-        knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
-        knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
-        
+        # --- NEW: CS Strength Logic (Phase 0.5) ---
+        strength_reply = get_cs_strength(user_msg) # Namma munnadi create panna function
+        if strength_reply:
+            return jsonify({"status": "success", "reply": strength_reply})
+
+        # --- PHASE 1: SQLite Search ---
         reply = None
-        if knowledge_dict:
-            best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-            if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
-                reply = knowledge_dict[best_match]
+        try:
+            conn = sqlite3.connect('college_bot.db')
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
+            knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
+            conn.close() # Fetch panna udane close pannidunga
 
-        # Phase 2: Gemini AI
+            if knowledge_dict:
+                best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
+                if score > 70:
+                    reply = knowledge_dict[best_match]
+        except Exception as db_e:
+            print(f"DB Error: {db_e}")
+
+        # --- PHASE 2: Gemini AI (Combined with Google Search info) ---
         if not reply and model:
             try:
-                response = model.generate_content(user_msg)
+                # Inga dhaan AI unga college pathi search panni badhil sollum
+                response = model.generate_content(f"You are the GAC Karur AI. User query: {user_msg}")
                 reply = response.text
             except:
                 reply = None
 
-        # Phase 3: Final Fallback
+        # --- PHASE 3: Final Fallback ---
         if not reply:
             reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
 
-        # Logging
-        c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
-                  (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
-        conn.commit()
-        conn.close()
-        
         return jsonify({"status": "success", "reply": reply})
         
     except Exception as e:
-        print(f"Error: {e}") # Terminal-la enna error-nu paakka
+        print(f"System Error: {e}")
         return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
 
 
