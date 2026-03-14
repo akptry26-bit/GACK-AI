@@ -94,50 +94,45 @@ def chat():
         user_msg = data.get('message', '').strip().lower()
         reply = None
 
-        # PHASE 0: GREETINGS (Instant)
-        greetings_map = {"hi": "Hello!", "hello": "Hi! GAC AI online.", "thanks": "Welcome!"}
-        if user_msg in greetings_map:
-            return jsonify({"status": "success", "reply": greetings_map[user_msg]})
+        # --- Phase 0: Greetings ---
+        greetings = {"hi": "Hello! GAC CORE AI online.", "hello": "Hi! How can I help you?"}
+        if user_msg in greetings:
+            reply = greetings[user_msg]
 
-        # PHASE 1: LOCAL DATABASE (Knowledge Base)
-        conn = sqlite3.connect('college_bot.db')
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
-        knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
-        
-        if knowledge_dict:
-            best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-            if score > 75:
-                reply = knowledge_dict[best_match]
-
-        # PHASE 2: GEMINI AI + GOOGLE SEARCH (Idhu dhaan mukhkiyam)
-        if not reply and model:
-            try:
-                # System context kooda query anupuvom
-                prompt = f"You are GAC Karur Assistant. Current Date: 2026. Use Google Search to answer: {user_msg}"
-                response = model.generate_content(prompt)
-                if response and response.text:
-                    reply = response.text
-            except Exception as ai_err:
-                print(f"AI/Google Error: {ai_err}")
-                reply = None
-
-        # PHASE 3: FINAL FALLBACK
+        # --- Phase 1: Local DB Search ---
         if not reply:
-            reply = "I'm still learning about that. Please ask about GAC Karur departments or admissions."
+            conn = sqlite3.connect('college_bot.db')
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
+            knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
+            if knowledge_dict:
+                match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
+                if score > 85: reply = knowledge_dict[match]
 
-        # Logging to DB
+        # --- Phase 2: GOOGLE SEARCH PUSH (The Real Fix) ---
+        # DB-la illana automatic-ah Google-la irundhu 2026 data push aagum
+        if not reply:
+            reply = get_live_google_response(user_msg)
+
+        # --- Phase 3: Final Fallback (Professional) ---
+        if not reply:
+            reply = "I'm having trouble fetching live data. Please check gackarur.ac.in for 2026 updates."
+
+        # Logging (Fixed spacing to avoid Line 154 error)
+        conn = sqlite3.connect('college_bot.db')
+        c = conn.cursor()
         c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
                   (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
         conn.commit()
         conn.close()
-
+        
         return jsonify({"status": "success", "reply": reply})
 
     except Exception as e:
-        print(f"System Error: {e}")
-        return jsonify({"status": "error", "reply": "Thinking... try asking again!"})
+        print(f"Critical Error: {e}")
+        return jsonify({"status": "error", "reply": "Thinking... try again!"}), 500
+
 
 # 5. ADMIN PANEL & LOGIN LOGIC
 @app.route('/admin-login', methods=['GET', 'POST'])
