@@ -15,7 +15,7 @@ app.secret_key = 'GAC_CORE_AI_2026_SECURE_KEY' # session handle panna idhu mukki
 # Admin Credentials
 ADMIN_USER = "admin"
 ADMIN_PASS = "GAC@2026"
-
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 # 2. GEMINI AI SETUP (Fallback)
 api_key = os.environ.get('GEMINI_API_KEY')
 if not api_key:
@@ -29,8 +29,10 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 
 
 # Step 2: Use the most basic model
-model = genai.GenerativeModel('gemini-2.5-flash') 
-# Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
+model = model = genai.GenerativeModel(
+    model_name='gemini-2.5-flash',
+    tools=[{'google_search_retrieval': {}}] # Indha line dhaan Google Search-ah active pannum
+)
 
 
 
