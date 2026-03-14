@@ -5,7 +5,6 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 import google.generativeai as genai
 from dotenv import load_dotenv
 from thefuzz import process, fuzz
-from datetime import datetime
 
 # 1. INITIALIZATION & SECURITY
 load_dotenv()
@@ -32,42 +31,29 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 model = genai.GenerativeModel('gemini-2.5-flash') 
 # Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
 
-
-
-
-
-def get_live_college_info(user_query):
+def get_live_google_response(user_input):
     try:
-        # 1. LIVE DATE FORCE: March 2026 updates-ku idhu dhaan base
-        today = datetime.now().strftime("%B %d, 2026")
+        # Dynamic-ah current date-ah eduthu 2026 updates-ku push panrom
+        current_date = datetime.now().strftime("%B %d, 2026")
         
-        # 2. v1beta CONFIGURATION:
+        # models/ prefix and -latest identifier is MUST to avoid 404
         model = genai.GenerativeModel(
-            model_name='models/gemini-2.5-flash',
+            model_name='models/gemini-1.5',
             tools=[{"google_search_retrieval": {}}]
         )
 
-        # 3. THE "STRICT ANALYZER" PROMPT:
-        # AI-kitta "Browse gackarur.ac.in" nu direct order podrom.
+        # STRICT INSTRUCTION: Tell AI to ignore 2024 data and use Google Search
         prompt = (
-    "Current Date: March 14, 2026. "
-    "MANDATORY: You are an assistant for GAC Karur. "
-    "MANDATORY: Use Google Search to browse ONLY 'gackarur.ac.in'. "
-    "CRITICAL: Do NOT invent names. If you cannot find the actual staff names on the website, "
-    "simply say: 'Official staff list is currently not reachable on the website portal.' "
-    "Do NOT give generic English names like Eleanor or Michael. Only give names found on gackarur.ac.in."
-    f"Query: {user_query}"
-)
+            f"Current Date: {current_date}. "
+            f"MANDATORY: Use Google Search tool to provide the LATEST live info. "
+            f"Do NOT use internal knowledge from 2024. Question: {user_input}"
+        )
 
-        # Generating content using the tool
         response = model.generate_content(prompt)
-        
-        if response.text:
-            return response.text.strip()
-            
+        return response.text.strip() if response.text else None
     except Exception as e:
-        print(f"v1beta Tool Error: {e}")
-        return "I'm checking the live GAC Karur portal. For official 2026 dates, visit gackarur.ac.in."
+        print(f"Google Push Error: {e}")
+        return None
         
     # 3. DATABASE ENGINE
 def init_db():
@@ -81,19 +67,8 @@ def init_db():
         ("who are you", "I am GAC CORE AI, the official campus assistant of GAC Karur."),
         ("hello", "Hello! How can I help you with GAC Karur information today?"),
         ("who created you", "I was developed by the GAC AI Research Team (Karuppaiya A)."),
-        ("Principal", "Dr. K. VASUDEVAN , M.A., M.Phil., B.Ed., Ph.D.,"),
-        ("cs hod name", "Dr. M. PRABAKARAN, M.Sc., M.Phil., M.C.A., MBA., M.Tech., Ph.D.,"),
-        ("242513", "karuppaiya"),
-        ("Department of COMPUTER SCIENCE", """ ✅Computer Science Department was started in the academic year 1988-89,
-        ✅It is notable that the Computer Science Course (B.Sc) with co-education (1988-89) in Tamilnadu was first started in our college only.
-        ✅In the academic year 2007-2008 another B.Sc Computer Science ( Shift II ) was started as per the Tamilnadu Government Order.
-        ✅In the academic year 2004-2005 Post Graduate Course ( M.Sc ) was started.
-        ✅The sanctioned strength is 60 ( 30 + 30 ) for under graduate Programmes and 30 for post graduate Programme.
-        ✅Research Programmes such as M.Phil and Ph.D was started in the year 2011-2012 academic year.
-        ✅Full time and Part time research Programmes are offered and it was approved by both Government of Tamilnadu and Bharathidasan University, Tiruchirapalli, with sanctioned strength of 25 for M.Phil and 16 for Ph.D.
-        ✅The Department is functioning successfully with Eight regular staff members and Four guest lecturers. """)
+        ("college name", "Government Arts College (Autonomous), Karur.")
     ]
-                                                                                                                                 
     c.executemany('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', default_data)
     conn.commit()
     conn.close()
@@ -111,19 +86,7 @@ def ask():
         print(f"Error: {e}") 
         return jsonify({'reply': 'LINK ERROR: Server connection failed.'})
 
-
-
-
-
-
-
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
-
-
-
-
-
-# --- STEP 2: The Final Chat Route ---
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
@@ -235,7 +198,6 @@ def add_knowledge():
     conn.close()
     return redirect(url_for('admin_portal'))
 
-
 @app.route('/delete/<int:id>')
 def delete_entry(id):
     if not session.get('logged_in'): return redirect(url_for('login'))
@@ -256,26 +218,6 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
