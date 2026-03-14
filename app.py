@@ -129,53 +129,47 @@ def chat():
     try:
         data = request.get_json()
         user_msg = data.get('message', '').strip().lower()
-        reply = None
-
-        # 1. First Priority: Greetings & Strength (Very Fast)
-        greetings = {"hi": "Hello!", "hello": "Hi there!", "thanks": "Welcome!"}
+        
+        # --- 1. GREETINGS & STRENGTH (Instant Logic) ---
+        greetings = {"hi": "Hello!", "hello": "Hi! GAC AI here.", "thanks": "Welcome!"}
         if user_msg in greetings:
             return jsonify({"status": "success", "reply": greetings[user_msg]})
         
-        reply = get_cs_strength(user_msg)
-        if reply: return jsonify({"status": "success", "reply": reply})
+        strength_reply = get_cs_strength(user_msg)
+        if strength_reply:
+            return jsonify({"status": "success", "reply": strength_reply})
 
-        # 2. Second Priority: Local Knowledge (Database/Tuple List)
+        # --- 2. LOCAL DATA (The Tuple List) ---
+        # Database fetch pannaama direct-ah unga default_data list-ah check panroam
         for question, answer in default_data:
             if question.lower() in user_msg:
                 return jsonify({"status": "success", "reply": answer})
 
-        # 3. Third Priority: GEMINI AI + GOOGLE SEARCH (The Main Brain)
-        # Indha block dhaan ippo nichayamaa execute aaganum
+        # --- 3. GEMINI AI + GOOGLE SEARCH (The Brain) ---
         if model:
             try:
-                # System context set panrom, so general questions-ku Google use pannum
-                full_prompt = (
-                    f"You are the GAC Karur Academic Assistant. Use your internal knowledge "
-                    f"and Google Search to answer: {user_msg}"
-                )
-                
-                # Google Search enabled call
+                # Inga dhaan Google Search power-ah enable panroam
                 response = model.generate_content(
-                    full_prompt,
+                    f"You are the GAC Karur Assistant. Use Google Search to answer: {user_msg}",
                     tools=[{'google_search_retrieval': {}}]
                 )
-                
                 if response and response.text:
                     return jsonify({"status": "success", "reply": response.text.strip()})
-            except Exception as ai_err:
-                print(f"Gemini Error: {ai_err}")
-                # AI fail aana mattum normal message anuppum
-                pass
+            except Exception as ai_e:
+                print(f"AI Error: {ai_e}")
 
-        # 4. Final Fallback (Edhuvume work aagala-na mattum idhu varum)
+        # --- 4. SAFE FALLBACK ---
+        # Edhuvume work aagala-na kooda indha message dhaan varanum, 'Link Error' varaadhu
         return jsonify({
             "status": "success", 
-            "reply": "I am currently learning about that. Try asking about CS department or admissions!"
+            "reply": "I am looking into that for you. Try asking about CS department or Principal!"
         })
 
     except Exception as e:
+        # Inga dhaan 'Link Error' msg irundhudhu, ippo adha remove pannitom
         print(f"Server Error: {e}")
-        return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
+        return jsonify({"status": "success", "reply": "Thinking... please try again!"})
+
 
 
 # 5. ADMIN PANEL & LOGIN LOGIC
