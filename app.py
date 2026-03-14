@@ -21,48 +21,30 @@ if not api_key:
     print("Warning: API Key not found!")
 else:
     genai.configure(api_key=api_key)
-
+    
 GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts College, Karur. If users ask unrelated questions, politely tell them you only handle college queries."
 
-# Step 1: Replace with your actual key
 
+model = genai.GenerativeModel('gemini-2.5-flash')
 
-# Step 2: Use the most basic model
-model = genai.GenerativeModel('gemini-1.5-flash') 
-# Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
-def get_live_google_response(user_input):
+def get_final_answer(user_query):
     try:
-        # 1. Models/ prefix illama 'gemini-1.5-flash' use pannunga (Stable)
-        # 2. Tool configuration-ah inge correct-ah set panrom
-        search_model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
-            tools=[{"google_search_retrieval": {}}]
-        )
-
-        # 3. Current date-ah query-la serthaa dhaan AI-ku 2026 updates puriyum
-        current_date = datetime.now().strftime("%B %d, 2026")
+        # Prompt engineering to force a simple response
+        simple_prompt = f"Answer in 1 or 2 sentences: {user_query}"
         
-        prompt = (
-            f"Current Date: {current_date}. "
-            f"You are the GAC Karur Academic Assistant. "
-            f"Use Google Search to provide the LATEST live information. "
-            f"Question: {user_input}"
-        )
-
-        # 4. Content generate panrom
-        response = search_model.generate_content(prompt)
+        response = model.generate_content(simple_prompt)
         
-        # 5. Response text irukkannu check panni return panrom
         if response and response.text:
+            # Response-ah trim panni clean-ah tharom
             return response.text.strip()
         else:
-            return None
-
+            return "Could you please rephrase your question about GAC Karur?"
+            
     except Exception as e:
-        print(f"Google Search Error: {e}")
-        return None
-        
-        
+        print(f"Error: {e}")
+        # Screenshot (2)-la neenga vachurukura fallback message
+        return "I am trained to answer questions about GAC Karur courses and admissions."
+
     # 3. DATABASE ENGINE
 def init_db():
     conn = sqlite3.connect('college_bot.db')
@@ -75,27 +57,31 @@ def init_db():
         ("who are you", "I am GAC CORE AI, the official campus assistant of GAC Karur."),
         ("hello", "Hello! How can I help you with GAC Karur information today?"),
         ("who created you", "I was developed by the GAC AI Research Team (Karuppaiya A)."),
-        ("college name", "Government Arts College (Autonomous), Karur."),
-        ("About the College","The Government Arts College, Thanthonimalai, Karur enjoys the fame of being the only institution in the whole district to show the longest academic history and public service. Established in 1966, it has worked its way ahead of other colleges in the matter of offering higher education of remarkable quality and largely to middle and lower income groups. The repute of this town as a textile industrial centre is further enhanced by the performance record of the Government Arts College Karur as it has never once in the recent years lacked a gold medalist. This college is affiliated to Bharathidasan University, Tiruchirappalli."),
-         ("history", " Established in 1966 in Thanthonimalai, Government Arts College (Autonomous), Karur (GAC Karur) is a premier public institution in Tamil Nadu, initially affiliated with Madras University and later Bharathidasan University. It became co-educational in 1972 and currently holds an 'A' grade accreditation from NAAC. ")
-
+        ("college name", "Government Arts College (Autonomous), Karur.")
     ]
     c.executemany('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', default_data)
     conn.commit()
     conn.close()
 
 init_db()
+
 @app.route('/ask', methods=['POST'])
 def ask():
     try:
         user_message = request.json.get('message')
-        # Gemini API call
+        
+        # Simple test to check if AI is alive
         response = model.generate_content(user_message)
-        return jsonify({'reply': response.text})
+        
+        if response and hasattr(response, 'text'):
+            return jsonify({"reply": response.text})
+        else:
+            # Response vandhu text illana (Safety filter block)
+            return jsonify({"reply": "I am unable to answer this specific query. Please ask about GAC Karur."})
+            
     except Exception as e:
-        # Indha line-ah add pannunga, terminal-la enna error-nu kaattum
-        print(f"Error: {e}") 
-        return jsonify({'reply': 'LINK ERROR: Server connection failed.'})
+        print(f"DEBUG ERROR: {str(e)}") # Terminal-la error paaka
+        return jsonify({"reply": "Connectivity issue. Please check your internet or API key."})
 
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
 @app.route('/chat', methods=['POST'])
@@ -103,48 +89,70 @@ def chat():
     try:
         data = request.get_json()
         user_msg = data.get('message', '').strip().lower()
-        reply = None
+        
+        # --- PHASE 0: Instant Response (Greetings) ---
+        # Database-ku munnadiye idhu check pannum, so fast-ah irukkum
+        greetings_map = {
+        "hi": "Hello! Welcome to GAC CORE AI. How can I help you today?",
+        "hello": "Hi there! I am your GAC Karur digital assistant. Ask me anything!",
+        "hey": "Hey! GAC-karur AI online. What's on your mind?",
+        "gm": "Good Morning! Wishing you a wonderful and productive day at GAC Karur.",
+        "good morning": "Good Morning! Hope you have a great day ahead!",
+        "gn": "Good Night! Rest well. I'll be here if you need anything tomorrow.",
+        "good night": "Good Night! Sleep well. System entering low-power mode.",
+        "thank you": "You're very welcome! Glad I could help.",
+        "thanks": "No problem! Happy to assist a GAC student."
+        }
 
-        # 1. INSTANT GREETINGS
-        greetings_map = {"hi": "Hello!", "hello": "Hi! GAC AI online.", "thanks": "Welcome!"}
         if user_msg in greetings_map:
-            return jsonify({"status": "success", "reply": greetings_map[user_msg]})
+            reply = greetings_map[user_msg]
+            # Log panniye aaganum admin-ku theriya
+            conn = sqlite3.connect('college_bot.db')
+            c = conn.cursor()
+            c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
+                      (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
+            conn.commit()
+            conn.close()
+            return jsonify({"status": "success", "reply": reply})
 
-        # 2. LOCAL DATABASE (Phase 1)
+        # --- PHASE 1: Local Knowledge Base Search (Existing Code) ---
         conn = sqlite3.connect('college_bot.db')
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
+        
         knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
         knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
         
+        reply = None
         if knowledge_dict:
             best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
-            if score > 75:
+            if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
                 reply = knowledge_dict[best_match]
 
-        # 3. GOOGLE SEARCH + GEMINI AI (Phase 2 - IDHU DHAAN FIX!)
-        if not reply:
+        # Phase 2: Gemini AI
+        if not reply and model:
             try:
-                # Direct-ah unga live search function-ah call panroam
-                reply = get_live_google_response(user_msg)
-            except Exception as e:
-                print(f"AI Error: {e}")
+                response = model.generate_content(user_msg)
+                reply = response.text
+            except:
                 reply = None
 
-        # 4. FINAL FALLBACK
+        # Phase 3: Final Fallback
         if not reply:
-            reply = "I'm still learning about that. Please ask about GAC Karur courses or admissions!"
+            reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
 
         # Logging
         c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
                   (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
         conn.commit()
         conn.close()
-
+        
         return jsonify({"status": "success", "reply": reply})
-
+        
     except Exception as e:
-        return jsonify({"status": "error", "reply": "Thinking... try again!"})        
+        print(f"Error: {e}") # Terminal-la enna error-nu paakka
+        return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
+
 # 5. ADMIN PANEL & LOGIN LOGIC
 @app.route('/admin-login', methods=['GET', 'POST'])
 def login():
@@ -205,3 +213,4 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
