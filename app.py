@@ -106,6 +106,17 @@ def init_db():
         ("Principal", "Dr. K. VASUDEVAN , M.A., M.Phil., B.Ed., Ph.D.,"),
         ("cs hod name", "Dr. M. PRABAKARAN, M.Sc., M.Phil., M.C.A., MBA., M.Tech., Ph.D.,"),
         ("242513", "karuppaiya"),
+("cs staff", "The Computer Science department has highly qualified faculty: 1. Dr. M. PRABAKARAN (HOD), 2. Dr.A.Vinayagam, 3. Dr.C. Jayanthi, 4. Dr. A. Banumathi, 5. Dr.V.Baby Deepa."),
+# --- FACILITIES ---
+        ("library details", "The central library has over 60,000 books, 80 journals, and a modern digital library section."),
+        ("hostel facilities", "There are separate hostels for boys and girls with safe accommodation and healthy food."),
+        ("shift timings", "Shift 1: 08:45 AM to 01:40 PM. Shift 2: 01:45 PM to 06:15 PM."),
+        ("wifi and labs", "The campus is Wi-Fi enabled, and all science departments have well-equipped individual laboratories."),
+# --- CAMPUS RULES & TIMINGS ---
+        ("attendance rule", "Students must maintain a minimum of 75% attendance to appear for Semester Examinations."),
+        ("id card policy", "Wearing the College ID card is mandatory inside the campus at all times."),
+        ("ragging policy", "GAC Karur is a Ragging-Free campus. Ragging is strictly prohibited and punishable."),
+        ("office hours", "The college office works from 10:00 AM to 05:45 PM on all working days."),
         ("Department of COMPUTER SCIENCE", """ ✅Computer Science Department was started in the academic year 1988-89,
         ✅It is notable that the Computer Science Course (B.Sc) with co-education (1988-89) in Tamilnadu was first started in our college only.
         ✅In the academic year 2007-2008 another B.Sc Computer Science ( Shift II ) was started as per the Tamilnadu Government Order.
@@ -133,8 +144,70 @@ def ask():
         print(f"Error: {e}") 
         return jsonify({'reply': 'LINK ERROR: Server connection failed.'})
 
+
+def get_college_stats(user_msg):
+    # Data structure for CS Strength (Original data patti maathikonga)
+    cs_data = {
+        "ug 1st": {"total": "60", "boys": "35", "girls": "25"},
+        "ug 2nd": {"total": "58", "boys": "30", "girls": "28"},
+        "ug 3rd": {"total": "55", "boys": "32", "girls": "23"},
+        "pg 1st": {"total": "30", "boys": "12", "girls": "18"},
+        "pg 2nd": {"total": "25", "boys": "10", "girls": "15"}
+    }
+
+    msg = user_msg.lower()
+    
+    # Check if user is asking about CS strength
+    if "cs" in msg or "computer" in msg:
+        # Year identify pannuvom
+        year_key = ""
+        if "1st year" in msg or "i year" in msg: year_key = "1st"
+        elif "2nd year" in msg or "ii year" in msg: year_key = "2nd"
+        elif "3rd year" in msg or "iii year" in msg: year_key = "3rd"
+        
+        # Category (UG/PG) identify pannuvom
+        cat = "pg" if ("pg" in msg or "msc" in msg or "m.sc" in msg) else "ug"
+        final_key = f"{cat} {year_key}"
+
+        if year_key in ["1st", "2nd", "3rd"] and final_key in cs_data:
+            stats = cs_data[final_key]
+            if "boy" in msg: return f"There are {stats['boys']} boys in CS {final_key.upper()}."
+            if "girl" in msg: return f"There are {stats['girls']} girls in CS {final_key.upper()}."
+            return f"Total strength of CS {final_key.upper()} is {stats['total']} ({stats['boys']} Boys, {stats['girls']} Girls)."
+            
+    return None # Strength related illana None tharum
+
+
+
+
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
 @app.route('/chat', methods=['POST'])
+
+
+@app.route('/chat', methods=['POST'])
+def main_chat(): # Vera name-la handle pannunga
+    user_msg = request.json.get('message', '').lower()
+    
+    # 1. First: Check for Specific Strength (The new function)
+    strength_reply = get_college_stats(user_msg)
+    if strength_reply:
+        return jsonify({"reply": strength_reply})
+
+    # 2. Second: Check Default Data (Tuples list)
+    reply = ""
+    for question, answer in default_data:
+        if question in user_msg:
+            reply = answer
+            break
+            
+    if reply:
+        return jsonify({"reply": reply})
+
+    # 3. Third: Gemini Fallback
+    # reply = model.generate_content(user_msg).text
+    return jsonify({"reply": "I'm checking the official records for that."})
+
+
 def chat():
     try:
         data = request.get_json()
