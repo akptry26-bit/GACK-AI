@@ -133,17 +133,26 @@ def chat():
             if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
                 reply = knowledge_dict[best_match]
 
-        # Phase 2: Gemini AI
+        # --- PHASE 2: Gemini AI with Web Search ---
         if not reply and model:
             try:
-                response = model.generate_content(user_msg)
-                reply = response.text
-            except:
-                reply = None
-
-        # Phase 3: Final Fallback
-        if not reply:
-            reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
+                # 1. First, try Gemini with Google Search enabled
+                # NOTE: Tool call correct-ah irukanum
+                response = model.generate_content(
+                    f"You are the GAC Karur Assistant. A student is asking: {user_msg}. Answer using current info.",
+                    tools=[{'google_search_retrieval': {}}] 
+                )
+                
+                if response and response.text:
+                    reply = response.text
+            except Exception as e:
+                print(f"Gemini Search Error: {e}")
+                # 2. Fallback to Basic Gemini if search fails
+                try:
+                    basic_res = model.generate_content(f"Answer briefly: {user_msg}")
+                    reply = basic_res.text
+                except:
+                    reply = None
 
         # Logging
         c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
