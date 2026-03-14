@@ -15,13 +15,22 @@ app.secret_key = 'GAC_CORE_AI_2026_SECURE_KEY' # session handle panna idhu mukki
 # Admin Credentials
 ADMIN_USER = "admin"
 ADMIN_PASS = "GAC@2026"
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-# 2. GEMINI AI SETUP (Fallback)
-api_key = os.environ.get('GEMINI_API_KEY')
+
+
+api_key = os.environ.get("GOOGLE_API_KEY")
+
 if not api_key:
-    print("Warning: API Key not found!")
+    print("ERROR: API Key is missing in Render Settings!")
 else:
     genai.configure(api_key=api_key)
+    # Model configuration with Google Search
+    try:
+        model = genai.GenerativeModel(
+            model_name='gemini-1.5-flash',
+            tools=[{'google_search_retrieval': {}}]
+        )
+    except Exception as e:
+        print(f"Model Init Error: {e}")
 
 GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts College, Karur. If users ask unrelated questions, politely tell them you only handle college queries."
 
