@@ -84,13 +84,7 @@ def init_db():
         ("Principal", "Dr. K. VASUDEVAN , M.A., M.Phil., B.Ed., Ph.D.,"),
         ("cs hod name", "Dr. M. PRABAKARAN, M.Sc., M.Phil., M.C.A., MBA., M.Tech., Ph.D.,"),
         ("242513", "karuppaiya"),
-       ("cs staff", 
-        "The Computer Science department has highly qualified faculty: 
-        1. Dr. M. PRABAKARAN (HOD),
-        2. Dr.A.Vinayagam, 
-        3. Dr.C. Jayanthi, 
-        4. Dr. A. Banumathi, 
-        5. Dr.V.Baby Deepa."),
+   
 # --- FACILITIES ---
         ("library details", "The central library has over 60,000 books, 80 journals, and a modern digital library section."),
         ("hostel facilities", "There are separate hostels for boys and girls with safe accommodation and healthy food."),
