@@ -84,17 +84,6 @@ def init_db():
         ("Principal", "Dr. K. VASUDEVAN , M.A., M.Phil., B.Ed., Ph.D.,"),
         ("cs hod name", "Dr. M. PRABAKARAN, M.Sc., M.Phil., M.C.A., MBA., M.Tech., Ph.D.,"),
         ("242513", "karuppaiya"),
-   
-# --- FACILITIES ---
-        ("library details", "The central library has over 60,000 books, 80 journals, and a modern digital library section."),
-        ("hostel facilities", "There are separate hostels for boys and girls with safe accommodation and healthy food."),
-        ("shift timings", "Shift 1: 08:45 AM to 01:40 PM. Shift 2: 01:45 PM to 06:15 PM."),
-        ("wifi and labs", "The campus is Wi-Fi enabled, and all science departments have well-equipped individual laboratories."),
-# --- CAMPUS RULES & TIMINGS ---
-        ("attendance rule", "Students must maintain a minimum of 75% attendance to appear for Semester Examinations."),
-        ("id card policy", "Wearing the College ID card is mandatory inside the campus at all times."),
-        ("ragging policy", "GAC Karur is a Ragging-Free campus. Ragging is strictly prohibited and punishable."),
-        ("office hours", "The college office works from 10:00 AM to 05:45 PM on all working days."),
         ("Department of COMPUTER SCIENCE", """ ✅Computer Science Department was started in the academic year 1988-89,
         ✅It is notable that the Computer Science Course (B.Sc) with co-education (1988-89) in Tamilnadu was first started in our college only.
         ✅In the academic year 2007-2008 another B.Sc Computer Science ( Shift II ) was started as per the Tamilnadu Government Order.
@@ -104,7 +93,7 @@ def init_db():
         ✅Full time and Part time research Programmes are offered and it was approved by both Government of Tamilnadu and Bharathidasan University, Tiruchirapalli, with sanctioned strength of 25 for M.Phil and 16 for Ph.D.
         ✅The Department is functioning successfully with Eight regular staff members and Four guest lecturers. """)
     ]
-                                                                                                                                                                                                                   
+                                                                                                                                 
     c.executemany('INSERT OR IGNORE INTO knowledge (question, answer) VALUES (?, ?)', default_data)
     conn.commit()
     conn.close()
@@ -141,45 +130,69 @@ def chat():
         data = request.get_json()
         user_msg = data.get('message', '').strip().lower()
         
-        # 1. Greetings (Instant)
-        greetings = {"hi": "Hello!", "hello": "Hi! GAC AI online.", "thanks": "Welcome!"}
-        if user_msg in greetings:
-            return jsonify({"status": "success", "reply": greetings[user_msg]})
+        # --- PHASE 0: Instant Response (Greetings) ---
+        # Database-ku munnadiye idhu check pannum, so fast-ah irukkum
+        greetings_map = {
+            "hi": "Hello! Welcome to GAC CORE AI. How can I help you today?",
+        "hello": "Hi there! I am your GAC Karur digital assistant. Ask me anything!",
+        "hey": "Hey! GAC-karur AI online. What's on your mind?",
+        "gm": "Good Morning! Wishing you a wonderful and productive day at GAC Karur.",
+        "good morning": "Good Morning! Hope you have a great day ahead!",
+        "gn": "Good Night! Rest well. I'll be here if you need anything tomorrow.",
+        "good night": "Good Night! Sleep well. System entering low-power mode.",
+        
+        "thank you": "You're very welcome! Glad I could help.",
+        "thanks": "No problem! Happy to assist a GAC student."
+        }
 
-        # 2. Strength Data (Custom Logic)
-        strength_reply = get_cs_strength(user_msg) 
-        if strength_reply:
-            return jsonify({"status": "success", "reply": strength_reply})
+        if user_msg in greetings_map:
+            reply = greetings_map[user_msg]
+            # Log panniye aaganum admin-ku theriya
+            conn = sqlite3.connect('college_bot.db')
+            c = conn.cursor()
+            c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
+                      (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
+            conn.commit()
+            conn.close()
+            return jsonify({"status": "success", "reply": reply})
 
-        # 3. Local Data Search (The Tuple List from your screenshot)
-        # Indha loop mela neenga anupuna andha 'default_data' list-ah check pannum
-        for question, answer in default_data:
-            if question.lower() in user_msg:
-                return jsonify({"status": "success", "reply": answer})
+        # --- PHASE 1: Local Knowledge Base Search (Existing Code) ---
+        conn = sqlite3.connect('college_bot.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        
+        knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
+        knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
+        
+        reply = None
+        if knowledge_dict:
+            best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
+            if score > 70: # Konjam threshold-ah kuraichuruken (75 -> 70) for better results
+                reply = knowledge_dict[best_match]
 
-        # --- PHASE 2: Gemini AI with Google Search (Updated) ---
+        # Phase 2: Gemini AI
         if not reply and model:
             try:
-                # Tools-la 'google_search_retrieval' add panna dhaan search aagum
-                # Model configure pannum bodhu idhu irukanum
-                response = model.generate_content(
-                    f"You are the GAC Karur Assistant. User asked: {user_msg}",
-                    tools=[{'google_search_retrieval': {}}] # <--- Google Search Power!
-                )
-                
-                if response and response.text:
-                    reply = response.text
-            except Exception as e:
-                # Oru vela search fail aana, normal Gemini-ah call pannum
-                response = model.generate_content(f"Answer briefly: {user_msg}")
-                reply = response.text if response else None
+                response = model.generate_content(user_msg)
+                reply = response.text
+            except:
+                reply = None
 
-        # 5. Final Fallback
-        return jsonify({"status": "success", "reply": "I am trained for GAC Karur info. Can you be more specific?"})
+        # Phase 3: Final Fallback
+        if not reply:
+            reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
 
+        # Logging
+        c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
+                  (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"status": "success", "reply": reply})
+        
     except Exception as e:
-        # Error vandha 'Offline' nu sollaama, Gemini-ku redirect panna vaikkalam
-        return jsonify({"status": "success", "reply": "Thinking... try asking again!"})
+        print(f"Error: {e}") # Terminal-la enna error-nu paakka
+        return jsonify({"status": "error", "reply": "Thinking... please try again!"}), 500
 
 
 # 5. ADMIN PANEL & LOGIN LOGIC
