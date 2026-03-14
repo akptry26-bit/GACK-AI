@@ -139,28 +139,29 @@ def ask():
 
 
 
+
+# --- STEP 2: The Final Chat Route ---
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
         data = request.get_json()
         user_msg = data.get('message', '').strip().lower()
         
-        # --- PHASE 0: Instant Greetings ---
-        greetings_map = {
-            "hi": "Hello! Welcome to GAC CORE AI. How can I help you today?",
-            "hello": "Hi there! I am your GAC Karur digital assistant. Ask me anything!",
-            "gm": "Good Morning! Hope you have a great day at GAC Karur.",
-            "thanks": "No problem! Happy to assist a GAC student."
+        # 1. Greetings (Phase 0)
+        greetings = {
+            "hi": "Hello! Welcome to GAC CORE AI.",
+            "hello": "Hi! I'm your GAC Karur assistant. How can I help?",
+            "thanks": "You're welcome! Happy to help a GAC student."
         }
-        if user_msg in greetings_map:
-            return jsonify({"status": "success", "reply": greetings_map[user_msg]})
+        if user_msg in greetings:
+            return jsonify({"status": "success", "reply": greetings[user_msg]})
 
-        # --- NEW: CS Strength Logic (Phase 0.5) ---
-        strength_reply = get_cs_strength(user_msg) # Namma munnadi create panna function
+        # 2. Strength Data (Phase 0.5)
+        strength_reply = get_cs_strength(user_msg)
         if strength_reply:
             return jsonify({"status": "success", "reply": strength_reply})
 
-        # --- PHASE 1: SQLite Search ---
+        # 3. Database Knowledge Base (Phase 1)
         reply = None
         try:
             conn = sqlite3.connect('college_bot.db')
@@ -168,7 +169,7 @@ def chat():
             c = conn.cursor()
             knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
             knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
-            conn.close() # Fetch panna udane close pannidunga
+            conn.close()
 
             if knowledge_dict:
                 best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
@@ -177,16 +178,17 @@ def chat():
         except Exception as db_e:
             print(f"DB Error: {db_e}")
 
-        # --- PHASE 2: Gemini AI (Combined with Google Search info) ---
+        # 4. Gemini AI Fallback (Phase 2)
         if not reply and model:
             try:
-                # Inga dhaan AI unga college pathi search panni badhil sollum
-                response = model.generate_content(f"You are the GAC Karur AI. User query: {user_msg}")
+                # Giving Gemini the context that it's for GAC Karur
+                ai_prompt = f"You are the official GAC Karur Assistant. User asked: {user_msg}. Provide a helpful and concise answer."
+                response = model.generate_content(ai_prompt)
                 reply = response.text
             except:
                 reply = None
 
-        # --- PHASE 3: Final Fallback ---
+        # 5. Final Fallback (Phase 3)
         if not reply:
             reply = "I am trained to answer questions only about GAC Karur. Please ask about courses, principal, or admissions."
 
