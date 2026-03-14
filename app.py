@@ -181,7 +181,7 @@ def get_college_stats(user_msg):
 
 
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
-@app.route('/chat', methods=['POST'])
+
 
 
 @app.route('/chat', methods=['POST'])
@@ -207,7 +207,7 @@ def main_chat(): # Vera name-la handle pannunga
     # reply = model.generate_content(user_msg).text
     return jsonify({"reply": "I'm checking the official records for that."})
 
-
+@app.route('/chat', methods=['POST'])
 def chat():
     try:
         data = request.get_json()
