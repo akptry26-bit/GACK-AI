@@ -30,30 +30,38 @@ GAC_PROMPT = "You are GAC CORE AI, official assistant for Government Arts Colleg
 # Step 2: Use the most basic model
 model = genai.GenerativeModel('gemini-1.5-flash') 
 # Note: Experimental versions kasta-ma irundha 1.5-flash use panna stable-ah irukkum.
-
 def get_live_google_response(user_input):
     try:
-        # Dynamic-ah current date-ah eduthu 2026 updates-ku push panrom
-        current_date = datetime.now().strftime("%B %d, 2026")
-        
-        # models/ prefix and -latest identifier is MUST to avoid 404
-        model = genai.GenerativeModel(
-            model_name='models/gemini-1.5',
+        # 1. Models/ prefix illama 'gemini-1.5-flash' use pannunga (Stable)
+        # 2. Tool configuration-ah inge correct-ah set panrom
+        search_model = genai.GenerativeModel(
+            model_name='gemini-1.5-flash',
             tools=[{"google_search_retrieval": {}}]
         )
 
-        # STRICT INSTRUCTION: Tell AI to ignore 2024 data and use Google Search
+        # 3. Current date-ah query-la serthaa dhaan AI-ku 2026 updates puriyum
+        current_date = datetime.now().strftime("%B %d, 2026")
+        
         prompt = (
             f"Current Date: {current_date}. "
-            f"MANDATORY: Use Google Search tool to provide the LATEST live info. "
-            f"Do NOT use internal knowledge from 2024. Question: {user_input}"
+            f"You are the GAC Karur Academic Assistant. "
+            f"Use Google Search to provide the LATEST live information. "
+            f"Question: {user_input}"
         )
 
-        response = model.generate_content(prompt)
-        return response.text.strip() if response.text else None
+        # 4. Content generate panrom
+        response = search_model.generate_content(prompt)
+        
+        # 5. Response text irukkannu check panni return panrom
+        if response and response.text:
+            return response.text.strip()
+        else:
+            return None
+
     except Exception as e:
-        print(f"Google Push Error: {e}")
+        print(f"Google Search Error: {e}")
         return None
+        
         
     # 3. DATABASE ENGINE
 def init_db():
@@ -87,7 +95,6 @@ def ask():
         return jsonify({'reply': 'LINK ERROR: Server connection failed.'})
 
 # 4. CHATBOT CORE LOGIC (DB First, API Second)
-# --- CHAT ROUTE-KULLA INDHA LOGIC-AH UPDATE PANNUNGA ---
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
@@ -95,40 +102,46 @@ def chat():
         user_msg = data.get('message', '').strip().lower()
         reply = None
 
-        # 1. GREETINGS (Phase 0)
-        greetings = {"hi": "Hello!", "hello": "Hi! GAC AI online.", "thanks": "Welcome!"}
-        if user_msg in greetings:
-            return jsonify({"status": "success", "reply": greetings[user_msg]})
+        # 1. INSTANT GREETINGS
+        greetings_map = {"hi": "Hello!", "hello": "Hi! GAC AI online.", "thanks": "Welcome!"}
+        if user_msg in greetings_map:
+            return jsonify({"status": "success", "reply": greetings_map[user_msg]})
 
-        # 2. LOCAL DB SEARCH (Phase 1)
-        # (Unga existing SQLite code inga irukkum...)
-        # ... logic to find 'reply' from DB ...
+        # 2. LOCAL DATABASE (Phase 1)
+        conn = sqlite3.connect('college_bot.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        knowledge_data = c.execute("SELECT question, answer FROM knowledge").fetchall()
+        knowledge_dict = {row['question']: row['answer'] for row in knowledge_data}
+        
+        if knowledge_dict:
+            best_match, score = process.extractOne(user_msg, knowledge_dict.keys(), scorer=fuzz.token_set_ratio)
+            if score > 75:
+                reply = knowledge_dict[best_match]
 
-        # 3. GEMINI AI + GOOGLE SEARCH (Phase 2 - IDHU DHAAN IPO FIX PANROM)
-        if not reply and model:
+        # 3. GOOGLE SEARCH + GEMINI AI (Phase 2 - IDHU DHAAN FIX!)
+        if not reply:
             try:
-                # System instructions + Current Date for better accuracy
-                current_date = datetime.now().strftime("%B %d, 2026")
-                prompt = f"System: Current Date is {current_date}. You are GAC Karur AI. Use Google Search to answer: {user_msg}"
-                
-                response = model.generate_content(prompt)
-                
-                if response and response.text:
-                    reply = response.text.strip()
-            except Exception as ai_err:
-                print(f"AI/Google Error: {ai_err}")
+                # Direct-ah unga live search function-ah call panroam
+                reply = get_live_google_response(user_msg)
+            except Exception as e:
+                print(f"AI Error: {e}")
                 reply = None
 
-        # 4. FINAL FALLBACK (Phase 3)
+        # 4. FINAL FALLBACK
         if not reply:
             reply = "I'm still learning about that. Please ask about GAC Karur courses or admissions!"
+
+        # Logging
+        c.execute("INSERT INTO logs (timestamp, user_query, bot_response) VALUES (?, ?, ?)", 
+                  (datetime.now().strftime("%H:%M:%S"), user_msg, reply))
+        conn.commit()
+        conn.close()
 
         return jsonify({"status": "success", "reply": reply})
 
     except Exception as e:
-        print(f"Final Error: {e}")
-        return jsonify({"status": "error", "reply": "Thinking... try again!"})
-        
+        return jsonify({"status": "error", "reply": "Thinking... try again!"})        
 # 5. ADMIN PANEL & LOGIN LOGIC
 @app.route('/admin-login', methods=['GET', 'POST'])
 def login():
